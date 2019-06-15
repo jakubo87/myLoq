@@ -1,0 +1,63 @@
+Build started at 2019-05-23T14:07:51.323790
+Main binary: /usr/bin/python
+Python system: Linux
+The Meson build system
+Version: 0.50.1
+Source dir: /home/jakub/Projects/hwloc-test
+Build dir: /home/jakub/Projects/hwloc-test/builddir
+Build type: native build
+Project name: hwloc-test
+Project version: 0.1.0
+Native C++ compiler: c++ (gcc 9.1.0 "c++ (GCC) 9.1.0")
+Build machine cpu family: x86_64
+Build machine cpu: x86_64
+Running compile:
+Working directory:  /tmp/tmpbqdok8m5
+Command line:  c++ /tmp/tmpbqdok8m5/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -o /tmp/tmpbqdok8m5/output.exe -O0 -fpermissive 
+
+Code:
+ #include<stdio.h>
+        
+        int main(int argc, char **argv) {
+            printf("%ld\n", (long)(sizeof(void *)));
+            return 0;
+        };
+Compiler stdout:
+ 
+Compiler stderr:
+ 
+Program stdout:
+
+8
+
+Program stderr:
+
+
+Running compile:
+Working directory:  /tmp/tmpy7jd1pqi
+Command line:  c++ /tmp/tmpy7jd1pqi/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -c -o /tmp/tmpy7jd1pqi/output.obj -O0 -fpermissive --print-search-dirs 
+
+Code:
+ 
+Compiler stdout:
+ install: /usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/
+programs: =/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../../x86_64-pc-linux-gnu/bin/x86_64-pc-linux-gnu/9.1.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../../x86_64-pc-linux-gnu/bin/
+libraries: =/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../../x86_64-pc-linux-gnu/lib/x86_64-pc-linux-gnu/9.1.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../../x86_64-pc-linux-gnu/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../x86_64-pc-linux-gnu/9.1.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../../lib/:/lib/x86_64-pc-linux-gnu/9.1.0/:/lib/../lib/:/usr/lib/x86_64-pc-linux-gnu/9.1.0/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../../x86_64-pc-linux-gnu/lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../:/lib/:/usr/lib/
+
+Compiler stderr:
+ 
+Library hwloc found: YES
+Adding test "testing hwtest"
+Build targets in project: 1
+Found ninja-1.9.0 at /usr/bin/ninja
+Running compile:
+Working directory:  /tmp/tmpc0ell8zy
+Command line:  c++ /tmp/tmpc0ell8zy/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -c -o /tmp/tmpc0ell8zy/output.obj -std=c++14 
+
+Code:
+ int i = static_cast<int>(0);
+Compiler stdout:
+ 
+Compiler stderr:
+ 
+Compiler accepts -std=c++14: YES

@@ -1,0 +1,8 @@
+[
+  {
+    "directory": "/home/jakub/Projects/hwloc-test/builddir",
+    "command": "c++ -Ihw-test@exe -I. -I.. -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall -Winvalid-pch -Wnon-virtual-dtor -std=c++14 -g -MD -MQ 'hw-test@exe/src_main.cc.o' -MF 'hw-test@exe/src_main.cc.o.d' -o 'hw-test@exe/src_main.cc.o' -c ../src/main.cc",
+    "file": "../src/main.cc",
+    "output": "hw-test@exe/src_main.cc.o"
+  }
+]
