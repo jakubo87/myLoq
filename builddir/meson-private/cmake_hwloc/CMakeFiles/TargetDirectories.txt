@@ -1,2 +1,0 @@
-/home/jakub/Projects/hwloc-test/builddir/meson-private/cmake_hwloc/CMakeFiles/rebuild_cache.dir
-/home/jakub/Projects/hwloc-test/builddir/meson-private/cmake_hwloc/CMakeFiles/edit_cache.dir

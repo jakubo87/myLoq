@@ -1,1 +1,0 @@
-[{"cmd": ["/home/jakub/Projects/hwloc-test/builddir/hw-test"], "env": {}, "name": "testing hwtest", "workdir": null, "timeout": 30, "suite": ["hwloc-test"], "is_parallel": true}]
