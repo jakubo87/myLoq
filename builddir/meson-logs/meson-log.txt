@@ -1,19 +1,20 @@
-Build started at 2019-05-23T14:07:51.323790
+Build started at 2019-06-24T21:54:07.352755
 Main binary: /usr/bin/python
 Python system: Linux
 The Meson build system
-Version: 0.50.1
+Version: 0.51.0
 Source dir: /home/jakub/Projects/hwloc-test
 Build dir: /home/jakub/Projects/hwloc-test/builddir
 Build type: native build
 Project name: hwloc-test
 Project version: 0.1.0
-Native C++ compiler: c++ (gcc 9.1.0 "c++ (GCC) 9.1.0")
+C++ compiler for the build machine: c++ (gcc 9.1.0 "c++ (GCC) 9.1.0")
+C++ compiler for the host machine: c++ (gcc 9.1.0 "c++ (GCC) 9.1.0")
 Build machine cpu family: x86_64
 Build machine cpu: x86_64
 Running compile:
-Working directory:  /tmp/tmpbqdok8m5
-Command line:  c++ /tmp/tmpbqdok8m5/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -o /tmp/tmpbqdok8m5/output.exe -O0 -fpermissive 
+Working directory:  /tmp/tmpv8wwe9ml
+Command line:  c++ /tmp/tmpv8wwe9ml/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -o /tmp/tmpv8wwe9ml/output.exe -O0 -fpermissive 
 
 Code:
  #include<stdio.h>
@@ -34,8 +35,8 @@ Program stderr:
 
 
 Running compile:
-Working directory:  /tmp/tmpy7jd1pqi
-Command line:  c++ /tmp/tmpy7jd1pqi/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -c -o /tmp/tmpy7jd1pqi/output.obj -O0 -fpermissive --print-search-dirs 
+Working directory:  /tmp/tmphs716p1u
+Command line:  c++ /tmp/tmphs716p1u/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -c -o /tmp/tmphs716p1u/output.obj -O0 -fpermissive --print-search-dirs 
 
 Code:
  
@@ -51,8 +52,8 @@ Adding test "testing hwtest"
 Build targets in project: 1
 Found ninja-1.9.0 at /usr/bin/ninja
 Running compile:
-Working directory:  /tmp/tmpc0ell8zy
-Command line:  c++ /tmp/tmpc0ell8zy/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -c -o /tmp/tmpc0ell8zy/output.obj -std=c++14 
+Working directory:  /tmp/tmpw8_b0q0y
+Command line:  c++ /tmp/tmpw8_b0q0y/testfile.cpp -pipe -D_FILE_OFFSET_BITS=64 -c -o /tmp/tmpw8_b0q0y/output.obj -std=c++14 
 
 Code:
  int i = static_cast<int>(0);

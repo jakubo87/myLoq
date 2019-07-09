@@ -1,36 +1,34 @@
 #include <iostream>
-#include <hwloc.h> //lokale Version?
+#include "hwloc.h" //lokale Version?
+#include <vector>
+#include <iostream>
+#include <string>
+#include <utility>
 
 /*
-std::ostream & operator<<(hwloc_topology_t t){
-  std::string s;
-  std::cout << s << "\n";
-}
-
-template <class T>
-auto std::ostream operator<<(T t){
-
-  return;
-}
+indentation of higher depth opjects
 */
+std::ostream & operator<<(std::ostream & os,std::pair<std::string,int> p){
+  std::string s;
+  for (int i=0; i<=p.second; ++i){
+    s+=" ";
+  }
+  s+=s+p.first;
 
+  return operator<<(os,s);
+}
 
-int main ()
-{
+std::ostream & operator<<(std::ostream & os, hwloc_topology_t & t){
+  //std::string s;
+
   int max_depth=0;
   int max_sib;
   int depth=0;
   char string[128];
+  std::string s;
 
 
-  hwloc_topology_t t;
-  hwloc_topology_init(&t);  // initialization
-  hwloc_topology_load(t);   // actual detection
 
-
- // nbcores = hwloc_get_nbobjs_by_type(t, HWLOC_OBJ_CORE);
-
-  //hwloc_const_cpuset_t cpuset = hwloc_topology_get_complete_cpuset(t);
 
   std::cout << "copied from example: hwloc style.\n";
 
@@ -40,41 +38,27 @@ int main ()
       printf("*** Objects at level %d\n", depth);
       for (int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); i++) {
         hwloc_obj_type_snprintf(string, sizeof(string), hwloc_get_obj_by_depth(t, depth, i), 0);
-        printf("Index %u: %s\n", i, string);
+        //printf("Index %u: %s\n", i, string);
+        s=string+'\n';
+        os << std::make_pair(s,depth);
       }
     }
 
-/*
-    printf("*** Printing overall tree\n");
-    print_children(t, hwloc_get_root_obj(t), 0); <-- doesnt work print children undeclared
-*/
+ // switch case
 
-  std::cout << "own approach.\n";
-
-  for (depth = 0; depth < max_depth; depth++) {
-      printf("*** Objects at level %d\n", depth);
-      for (int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); i++) {
-        hwloc_obj_type_snprintf(string, sizeof(string), hwloc_get_obj_by_depth(t, depth, i), 0);
-        printf("Index %u: %s\n", i, string);
-      }
-    }
-
-
-//  hwloc_obj_t current;
- // std::cout << "depth: " << hwloc_topology_get_complete_cpuset(t) << "\n";
- // obj->
+  return operator<<(os,"");
+}
 
 
 
+int main ()
+{
 
-/*
-
-  hwloc_obj_t root = hwloc_get_root_obj(t);
-
-  hwloc_obj_t nodes = hwloc_get_next_child(t, root, nullptr);
- // while(nullptr != )
-*/
-  //cleaning up:
+  hwloc_topology_t t;
+  hwloc_topology_init(&t);  // initialization
+  hwloc_topology_load(t);   // actual detection
+  std::cout << t <<"\n";
+     //cleaning up:
   hwloc_topology_destroy(t);
   return 0;
 }

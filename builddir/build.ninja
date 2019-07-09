@@ -12,28 +12,11 @@ rule cpp_COMPILER
  depfile = $DEPFILE
  description = Compiling C++ object $out.
 
-rule cpp_PCH
- command = c++ $ARGS -MD -MQ $out -MF '$DEPFILE' -o $out -c $in
- deps = gcc
- depfile = $DEPFILE
- description = Precompiling header $in.
-
-
 # Rules for linking.
 
-rule STATIC_LINKER
- command =  rm -f $out && gcc-ar $LINK_ARGS $out $in
- description = Linking static target $out.
-
 rule cpp_LINKER
- command = c++ $ARGS -o $out $in $LINK_ARGS $aliasing
+ command = c++ $ARGS -o $out $in $LINK_ARGS
  description = Linking target $out.
-
-
-rule SHSYM
- command = /usr/bin/meson --internal symbolextractor $in $out $CROSS
- restat = 1
- description = Generating symbol file $out.
 
 # Other rules
 
@@ -42,21 +25,14 @@ rule CUSTOM_COMMAND
  description = $DESC
  restat = 1
 
-rule CUSTOM_COMMAND_DEP
- command = $COMMAND
- description = $DESC
- deps = gcc
- depfile = $DEPFILE
- restat = 1
-
 rule REGENERATE_BUILD
  command = /usr/bin/meson --internal regenerate /home/jakub/Projects/hwloc-test /home/jakub/Projects/hwloc-test/builddir --backend ninja
  description = Regenerating build files.
  generator = 1
 
-
 # Phony build target, always out of date
-build PHONY: phony
+
+build PHONY: phony 
 
 # Build rules for targets
 
@@ -115,12 +91,10 @@ build uninstall: phony meson-uninstall
 
 build all: phony hw-test
 
-default all
-
 build clean: phony meson-clean
 
 build meson-clean: CUSTOM_COMMAND PHONY
- COMMAND = ninja -t clean
+ COMMAND = /usr/bin/ninja -t clean
  description = Cleaning.
 
 build build.ninja: REGENERATE_BUILD ../meson.build meson-private/coredata.dat
@@ -130,4 +104,6 @@ build reconfigure: REGENERATE_BUILD PHONY
  pool = console
 
 build ../meson.build meson-private/coredata.dat: phony 
+
+default all
 
