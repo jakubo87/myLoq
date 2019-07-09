@@ -39,7 +39,8 @@ std::ostream & operator<<(std::ostream & os, hwloc_topology_t & t){
       for (int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); i++) {
         hwloc_obj_type_snprintf(string, sizeof(string), hwloc_get_obj_by_depth(t, depth, i), 0);
         //printf("Index %u: %s\n", i, string);
-        s=string+'\n';
+        s=string;
+        s+='\n';
         os << std::make_pair(s,depth);
       }
     }
