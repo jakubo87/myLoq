@@ -1,5 +1,5 @@
 #include <iostream>
-#include "hwloc.h" //lokale Version?
+#include "hwloc-git/include/hwloc.h" //lokale Version?
 #include <vector>
 #include <iostream>
 #include <string>
@@ -31,27 +31,27 @@ std::ostream & operator<<(std::ostream & os,std::pair<M,int> p){
 
 std::string translate_type(hwloc_obj_t & obj){ //TODO something is not right...!
   switch (obj->type) {
-    case 0 : return "HWLOC_OBJ_MACHINE";
-    case 1 : return "HWLOC_OBJ_PACKAGE";
-    case 2 : return "HWLOC_OBJ_CORE";
-    case 3 : return "HWLOC_OBJ_PU";
-    case 4 : return "HWLOC_OBJ_L1CACHE";
-    case 5 : return "HWLOC_OBJ_L2CACHE";
-    case 6 : return "HWLOC_OBJ_L3CACHE";
-    case 7 : return "HWLOC_OBJ_L4CACHE";
-    case 8 : return "HWLOC_OBJ_L5CACHE";
-    case 9 : return "HWLOC_OBJ_L1ICACHE";
-    case 10 : return "HWLOC_OBJ_L2ICACHE";
-    case 11 : return "HWLOC_OBJ_L3ICACHE";
-    case 12 : return "HWLOC_OBJ_GROUP";
-    case 13 : return "HWLOC_OBJ_NUMANODE";
-    case 14 : return "HWLOC_OBJ_BRIDGE";
-    case 15 : return "HWLOC_OBJ_PCI_DEVICE";
-    case 16 : return "HWLOC_OBJ_OS_DEVICE";
-    case 17 : return "HWLOC_OBJ_MISC";
-    case 18 : return "HWLOC_OBJ_MEMCACHE";
-    case 19 : return "HWLOC_OBJ_DIE";
-    case 20 : return "HWLOC_OBJ_TYPE_MAX";
+    case HWLOC_OBJ_MACHINE :  return std::string("HWLOC_OBJ_MACHINE");
+    case HWLOC_OBJ_PACKAGE :  return "HWLOC_OBJ_PACKAGE";
+    case HWLOC_OBJ_CORE :     return "HWLOC_OBJ_CORE";
+    case HWLOC_OBJ_PU :       return "HWLOC_OBJ_PU";
+    case HWLOC_OBJ_L1CACHE :  return "HWLOC_OBJ_L1CACHE";
+    case HWLOC_OBJ_L2CACHE :  return "HWLOC_OBJ_L2CACHE";
+    case HWLOC_OBJ_L3CACHE :  return "HWLOC_OBJ_L3CACHE";
+    case HWLOC_OBJ_L4CACHE :  return "HWLOC_OBJ_L4CACHE";
+    case HWLOC_OBJ_L5CACHE :  return "HWLOC_OBJ_L5CACHE";
+    case HWLOC_OBJ_L1ICACHE : return "HWLOC_OBJ_L1ICACHE";
+    case HWLOC_OBJ_L2ICACHE : return "HWLOC_OBJ_L2ICACHE";
+    case HWLOC_OBJ_L3ICACHE : return "HWLOC_OBJ_L3ICACHE";
+    case HWLOC_OBJ_GROUP : return "HWLOC_OBJ_GROUP";
+    case HWLOC_OBJ_NUMANODE : return "HWLOC_OBJ_NUMANODE";
+    case HWLOC_OBJ_BRIDGE : return "HWLOC_OBJ_BRIDGE";
+    case HWLOC_OBJ_PCI_DEVICE : return "HWLOC_OBJ_PCI_DEVICE";
+    case HWLOC_OBJ_OS_DEVICE : return "HWLOC_OBJ_OS_DEVICE";
+    case HWLOC_OBJ_MISC : return "HWLOC_OBJ_MISC";
+    case HWLOC_OBJ_MEMCACHE : return "HWLOC_OBJ_MEMCACHE";
+    case HWLOC_OBJ_DIE : return "HWLOC_OBJ_DIE";
+    case HWLOC_OBJ_TYPE_MAX : return "HWLOC_OBJ_TYPE_MAX";
     default : return "HWLOC_CUSTOM_OBJ";
   };
 }
@@ -59,12 +59,16 @@ std::string translate_type(hwloc_obj_t & obj){ //TODO something is not right...!
 
 void traverse_tree_DF(std::ostream & os, hwloc_obj_t obj, int depth){
     do{
-      os << std::make_pair(translate_type(obj), depth) << "\n"; //Konstruktor von string um typsystem nicht zu ärgern
+      os << std::make_pair(translate_type(obj), depth) << "\n";
+      os << "still alive\n";
       if (obj->first_child){
-        traverse_tree_DF(os,obj->first_child,++depth);
+        os << "still alive2\n";
+        traverse_tree_DF(os,obj->memory_first_child,++depth);
       }
+      os << "still alive3\n";
       obj=obj->next_sibling;
     }while (obj);
+    os << "still alive4\n";
 }
 
 void traverse_tree_DF(std::ostream & os, hwloc_obj_t obj){
