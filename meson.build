@@ -8,7 +8,7 @@ src=['src/main.cc']
 
 
 cxx=meson.get_compiler('cpp')
-my_dep = cxx.find_library('hwloc')
+my_dep = cxx.find_library('hwloc', dirs : '/home/jakub/Projects/hwloc-test/hwloc-git/include')
 
 #hwloc_inc=include_directories( 'hwloc-git')
 #hwloc_lib=static_library('hwloc')

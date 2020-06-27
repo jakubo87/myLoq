@@ -1,3 +1,7 @@
 #IGNORE folders
 builddir/
 hwloc-git/
+#IGNORE files
+*.o
+*.dot
+*.a
