@@ -5,3 +5,4 @@ hwloc-git/
 *.o
 *.dot
 *.a
+*.svg

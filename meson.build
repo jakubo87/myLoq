@@ -1,3 +1,4 @@
+#deprecated
 project('hwloc-test', 'cpp', default_options : ['cpp_std=c++14'],
 	version: '0.1.0',
 	meson_version: '>= 0.51.0',
