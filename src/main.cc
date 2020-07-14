@@ -102,6 +102,7 @@ int main ()
   //hwloc_init
   hwloc_topology_t t;
   hwloc_topology_init(&t);  // initialization
+  hwloc_topology_set_io_types_filter(t, HWLOC_TYPE_FILTER_KEEP_ALL); //for all the devices, or...
   //hwloc_topology_set_io_types_filter(t,HWLOC_TYPE_FILTER_KEEP_IMPORTANT);
   hwloc_topology_load(t);   // actual detection
   //std::cout << t <<"\n"; //print nodes

@@ -9,8 +9,8 @@
 
 
 struct Vertex {
-  std::string name;
-  int     level;
+  int type; 
+  int index;
 };
 
 struct Edge {

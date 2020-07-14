@@ -9,7 +9,7 @@ class label_writer {
 public:
   template <class VertexOrEdge>
   void operator()(std::ostream& out, const VertexOrEdge& v) const {
-    out << "[label=\"" << v.name << "\"]";
+    out << "[label=\"" << v.name << " #" << v.index << "\"]";
   }
 };
 
