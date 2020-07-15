@@ -9,8 +9,8 @@
 
 
 struct Vertex {
-  int type; 
-  int index;
+  std::string type; 
+  unsigned int index;
 };
 
 struct Edge {
@@ -18,7 +18,7 @@ struct Edge {
   double weight; // perhaps you need this later as well, just an example
 };
 
-using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, Vertex, Edge>; //first for test later DiGraph
+using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, Vertex, Edge>; //first for test later DiGraph
 
 graph_t init_graph(const hwloc_topology_t & t);
 

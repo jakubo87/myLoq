@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <hwloc.h>
+#include <vector>
 #include <boost/graph/adjacency_list.hpp>
 #include "../include/init_graph.h"
 
@@ -71,14 +72,14 @@ graph_t init_graph(const hwloc_topology_t & t){
   printf("*** %u package(s)\n",hwloc_get_nbobjs_by_depth(t, depth));
   }
 
-  //query all the types and insert into graph TODO
+  //query all the special types and insert into graph TODO
   //first all the memory for testing
   auto obj = hwloc_get_obj_by_type(t, HWLOC_OBJ_NUMANODE, 0);
   auto nobj = hwloc_get_nbobjs_by_type(t, HWLOC_OBJ_NUMANODE);
-  for (unsigned int i = 0; i<nobj; ++i){  
+  for (int i = 0; i<nobj; ++i){  
     boost::add_vertex(
-        {obj->type,           //type
-         obj->logical_index}, //index
+        {obj_type_toString(obj), //type
+         obj->logical_index},    //index
          g); 
     std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
   }
@@ -92,14 +93,38 @@ graph_t init_graph(const hwloc_topology_t & t){
     for (unsigned int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); ++i) {
       obj = hwloc_get_obj_by_depth(t, depth, i);
       boost::add_vertex(
-          {obj->type,
-           obj->logical_index},
-           g);  
+         {obj_type_toString(obj), //type
+          obj->logical_index},    //index
+          g);  
     std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
     }
   }
-  //TODO insert relationship among the vertices
-  //TODO make directed
+
+  //insert relationship among the vertices
+  if (boost::add_edge(
+    1, //out
+    2, //in
+    {"test", 0.0}, // edge property
+    g).second)
+    { std::cout << "Added Edge: (from 1 to 2, label: test" << std::endl;}
+
+
+/* //pick a couple of vertices by type and display properties
+
+  vector<int> cores;  //actually not int but vertex-descriptor which is an alias...
+  for (const auto & v boost::vertices(g)){
+    if (boost::get(v,,g)){   
+      cores.push_back(v);
+    }
+  };
+*/
+
+  //query the type of the first vertex
+  //std::cout << boost::get(graph_t::vertex_property_tag::type, g, 1) << std::endl;
+  graph_t::vertex_descriptor vd = *vertices(g).first; // first is the begin() iterator *ing it will give its position
+  std::cout <<"vertex: " << vd << " , type: " << g[vd].type << std::endl;
+  //conclusion... querying data is range based.. no big deal.. 
+
   return g;
 }
 
