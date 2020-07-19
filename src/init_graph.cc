@@ -2,29 +2,21 @@
 #include <string>
 #include <hwloc.h>
 #include <vector>
+#include <functional>
 #include <boost/graph/adjacency_list.hpp>
 #include "../include/init_graph.h"
 
 
-template<class C>
-auto make_group(const std::string & name, const C & cont, graph_t & g){
-  //insert group vertex into graph
-  auto v = boost::add_vertex(
-      {name, //vertex type
-      0},     //id - all Groups have id 0 the user needs to choose a unique name
-      g);
-  for (auto & vd : cont){ //for all vertex descriptors
-    //add a connection to the group members
-    boost::add_edge(
-        v,
-        vd,
-        {"member"},
-        g);
-  }
-  std::cout << "Group: " << name << " has been created" << std::endl;
-  //.. containing vertices ...
-  return v;
+
+
+double distance( // g is not THE graph, it is any graph included -> shadowing
+              const int& vd1,
+              const int& vd2,
+              const graph_t& g,
+              std::function<double(int,int,const graph_t&)> func){
+  return func(vd1, vd2, g);
 }
+
 
 
 std::string obj_type_toString(hwloc_obj_t & obj){
@@ -143,12 +135,6 @@ graph_t init_graph(const hwloc_topology_t & t){
       }
     }
   }
-
-  //create group of one PU of each core
-  //ok.. first an arbitrary group
-  std::vector<int> c = {1,2};
-  make_group("Group1", c ,g);
-
 
 
 /*  //insert relationship among the vertices

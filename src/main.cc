@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <functional>
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
 
@@ -112,9 +113,18 @@ int main ()
   //cleaning up:
   hwloc_topology_destroy(t);
   //since data was copied hwloc is not needed anymore
-  //
+  
+  //make group - at first arbitraty
+  //TODO find partitioning
+  std::vector<int> vs = {4,5};
+  auto i = make_group("Group1", vs, g);
+  std::cout << " group 1 has vd: " << i << std::endl; 
+  //calc distance
+  std::function<double(int,int,graph_t)> dist1 =  [&](int va,int vb, const graph_t& g){return 1333.0;};
+  std::cout << distance(4,5,g, dist1) << std::endl;
+
   make_dotfile(g);
-  std::cout << "memory still missing" << std::endl;
+
   return 0;
 }
 
