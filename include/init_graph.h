@@ -15,7 +15,6 @@ struct Vertex {
 
 struct Edge {
   std::string label;
-  double weight; // perhaps you need this later as well, just an example
 };
 
 using graph_t = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, Vertex, Edge>; //first for test later DiGraph
@@ -26,6 +25,9 @@ graph_t init_graph(const hwloc_topology_t & t);
 
 std::string obj_type_toString(hwloc_obj_t & obj);
 
+//C is a container from which to get the groups elements
+template<class C>
+auto make_group(const std::string & name, const C & cont, graph_t & g);
 
 
 
