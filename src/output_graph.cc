@@ -22,5 +22,5 @@ void make_dotfile(const graph_t & g){
   const std::string dotf = "out.dot";
   std::ofstream dot(dotf);
   boost::write_graphviz(dot, g);//, label_writer()); //std::cout, g); //, label_writer());
-  std::cout << "Graph has been written to dotfile: " <</* dotf <<*/ std::endl;
+  std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
 }

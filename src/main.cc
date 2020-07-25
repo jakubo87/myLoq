@@ -8,91 +8,62 @@
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
 
-/*
-indentation of higher depth opjects
-*/
-std::ostream & operator<<(std::ostream & os,std::pair<std::string,int> p){
-  std::string s;
-  for (int i=0; i<=p.second; ++i){
-    s+=" ";
-  }
-  s+=s+p.first;
-
-  return operator<<(os,s);
-}
-//general for all types with a std::to_string implementation
-template <class M>
-std::ostream & operator<<(std::ostream & os,std::pair<M,int> p){
-  std::string s;
-  for (int i=0; i<=p.second; ++i){
-    s+=" ";
-  }
-  s+=s+std::to_string(p.first);
-
-  return operator<<(os,s);
-}
-
-
-
-///// somehow not quite working
-//void traverse_tree_DF(std::ostream & os, hwloc_obj_t obj, int depth){
-//    do{
-//      os << std::make_pair(obj_type_toString(obj), depth) << "\n";
-//      os << "still alive\n";
-//      if (obj->first_child){
-//        os << "still alive2\n";
-//        traverse_tree_DF(os,obj->memory_first_child,++depth);
+///*
+//indentation of higher depth opjects
+//*/
+//std::ostream & operator<<(std::ostream & os,std::pair<std::string,int> p){
+//  std::string s;
+//  for (int i=0; i<=p.second; ++i){
+//    s+=" ";
+//  }
+//  s+=s+p.first;
+//
+//  return operator<<(os,s);
+//}
+//
+////general for all types with a std::to_string implementation
+//template <class M>
+//std::ostream & operator<<(std::ostream & os,std::pair<M,int> p){
+//  std::string s;
+//  for (int i=0; i<=p.second; ++i){
+//    s+=" ";
+//  }
+//  s+=s+std::to_string(p.first);
+//
+//  return operator<<(os,s);
+//}
+//
+//
+////print topology
+//std::ostream & operator<<(std::ostream & os, hwloc_topology_t & t){
+//  //std::string s;
+//
+//  int max_depth=0;
+//  int depth=0;
+//  std::string s;
+//
+// //print breadth first
+//  os << "breadth first approach\n";
+//
+//  max_depth = hwloc_topology_get_depth(t);
+//
+//
+//  for (depth = 0; depth < max_depth; depth++) {
+//      os << "Objects at level " <<  depth << std::endl;
+//      for (unsigned int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); i++) {
+//        auto hw_obj = hwloc_get_obj_by_depth(t, depth, i);
+//        s=obj_type_toString(hw_obj) + " " + std::to_string(i) + "\n";
+//        s+= "OS_index: " + std::to_string(hw_obj->os_index) + "??? \n";
+//        s+= "logical index: " + std::to_string(hw_obj->logical_index);
+//        s+='\n';
+//        os << std::make_pair(s,depth);
 //      }
-//      os << "still alive3\n";
-//      obj=obj->next_sibling;
-//    }while (obj);
-//    os << "still alive4\n";
-//}
+//    }
 //
-//void traverse_tree_DF(std::ostream & os, hwloc_obj_t obj){
-//  traverse_tree_DF(os,obj, 0);
-//}
+//  os << "\n";
 //
-
-
-//print topology
-std::ostream & operator<<(std::ostream & os, hwloc_topology_t & t){
-  //std::string s;
-
-  int max_depth=0;
-  int depth=0;
-  std::string s;
-
- //print breadth first
-  os << "breadth first approach\n";
-
-  max_depth = hwloc_topology_get_depth(t);
-
-
-  for (depth = 0; depth < max_depth; depth++) {
-      os << "Objects at level " <<  depth << std::endl;
-      for (unsigned int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); i++) {
-        auto hw_obj = hwloc_get_obj_by_depth(t, depth, i);
-        s=obj_type_toString(hw_obj) + " " + std::to_string(i) + "\n";
-        s+= "OS_index: " + std::to_string(hw_obj->os_index) + "??? \n";
-        s+= "logical index: " + std::to_string(hw_obj->logical_index);
-        s+='\n';
-        os << std::make_pair(s,depth);
-      }
-    }
-
-  os << "\n";
-
- ////print depth first
- // os << "depth first approach\n";
- // //
- // depth=0;
- // hwloc_obj_t obj=hwloc_get_obj_by_depth(t, 0, depth); //ROOT
- // traverse_tree_DF(os, obj);
-
-
-  return operator<<(os,"");
-}
+//  return operator<<(os,"");
+//}
 
 
 
@@ -119,9 +90,22 @@ int main ()
   std::vector<int> vs = {4,5};
   auto i = make_group("Group1", vs, g);
   std::cout << " group 1 has vd: " << i << std::endl; 
-  //calc distance
-  std::function<double(int,int,graph_t)> dist1 =  [&](int va,int vb, const graph_t& g){return 1333.0;};
-  std::cout << distance(4,5,g, dist1) << std::endl;
+  //calc custom distance
+  //define a distance function:
+  std::function<double(int,int,graph_t)> dist1 =  [&](int va,int vb, const graph_t& g)
+    {
+      double res = 130.0;
+      ////candidate for querying edges - potentially wasteful to first narrow it down...
+      //auto range = boost::edge_range(va, vb, g);
+      ////check all edges for label "parent"
+      //std::for_each (range.first, range.second,[&](const auto & ei){
+      //  if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
+      //    res = 0.0;
+      //});
+      return res;
+    };
+  std::cout << "distance (5,7): " << distance(5,7,g, dist1) << std::endl;
+  std::cout << "distance (6,7): " << distance(6,7,g, dist1) << std::endl;
 
   make_dotfile(g);
 

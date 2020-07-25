@@ -6,9 +6,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include "../include/init_graph.h"
 
-
-
-
+//come to think of it...
+//it's pretty pointless to have a user define a distance, and then reaping all the credits for providing means of using it yourself...
 double distance( // g is not THE graph, it is any graph included -> shadowing
               const int& vd1,
               const int& vd2,
@@ -18,7 +17,7 @@ double distance( // g is not THE graph, it is any graph included -> shadowing
 }
 
 
-
+//name may be a bit misleading TODO: translation of hwloc_obj->type to string
 std::string obj_type_toString(hwloc_obj_t & obj){
   switch (obj->type) {
     case HWLOC_OBJ_MACHINE :  return std::string("HWLOC_OBJ_MACHINE");
@@ -120,47 +119,64 @@ graph_t init_graph(const hwloc_topology_t & t){
         auto pa_obj = obj->parent;
         if (g[vd].type == obj_type_toString(pa_obj) && g[vd].index == pa_obj->logical_index){
           pa_id.push_back(vd);
-	}
+  }
       });
-      for(auto & p : pa_id){ 
-        //Parent / child
+      for(auto & p : pa_id){ // for not necessary as in a tree (hwloc) there is only one parent)
+        // child
+        if (boost::add_edge(
+        v, //out
+        p, //in
+        {"child"}, // edge property
+        g).second)
+          {std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;}
+        // parent
         if (boost::add_edge(
         p, //out
         v, //in
-        {"child"}, // edge property
+        {"parent"}, // edge property
         g).second)
-          {std::cout << "Added Edge: (from " << p << " to " << v << ", label: child" << std::endl;}
-        //TODO check if 2 same edges will exist and make trouble
+          {std::cout << "Added Edge: (from " << p << " to " << v << ", label: parent" << std::endl;}
+        //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
+        //what is the multiset selector in edge list good for them..? TODO
         }
       }
     }
   }
 
+  //memory relationships - Adding here to not query vertices that have not been established yet
+  nobj = hwloc_get_nbobjs_by_type(t, HWLOC_OBJ_NUMANODE);
+  for (int i = 0; i<nobj; ++i){
+    auto obj = hwloc_get_obj_by_type(t, HWLOC_OBJ_NUMANODE, i);
+    auto v = get_vds(g, obj_type_toString(obj), obj->logical_index).at(0); 
+    //query parent vertex - again only go from child nodes to parents
+    auto pobj = obj->parent;
+    auto p = get_vds(g, obj_type_toString(pobj), pobj->logical_index).at(0); 
 
-/*  //insert relationship among the vertices
-  if (boost::add_edge(
-    1, //out
-    2, //in
-    {"test"}, // edge property
+    // child
+    if (boost::add_edge( // the "if" may be unnecessary, because the container allows for parallel edges 
+    v, //out - the numa node vertices are being constructed first, so their vd is the index i 
+    p, //in
+    {"child"}, // edge property
     g).second)
-    { std::cout << "Added Edge: (from 1 to 2, label: test" << std::endl;}
+      {std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;}
+    // parent
+    if (boost::add_edge(
+    p, //out
+    v, //in
+    {"parent"}, // edge property
+    g).second)
+      {std::cout << "Added Edge: (from " << p << " to " << v << ", label: parent" << std::endl;}
+    //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
+    //what is the multiset selector in edge list good for them..? TODO
+  }
 
-*/
-/* //pick a couple of vertices by type and display properties
+  //make default group with all memory and all cores
+  auto grp = get_vds_by_type(g,"HWLOC_OBJ_CORE");
+  auto mem = get_vds_by_type(g,"HWLOC_OBJ_NUMANODE");
 
-  vector<int> cores;  //actually not int but vertex-descriptor which is an alias...
-  for (const auto & v boost::vertices(g)){
-    if (boost::get(v,,g)){   
-      cores.push_back(v);
-    }
-  };
-*/
-
-  //query the type of the first vertex
-  //std::cout << boost::get(graph_t::vertex_property_tag::type, g, 1) << std::endl;
-  graph_t::vertex_descriptor vd = *vertices(g).first; // first is the begin() iterator dereferncing it will give its index
-  std::cout <<"vertex: " << vd << " , type: " << g[vd].type << std::endl;
-  //conclusion... querying data is range based.. no big deal.. 
+  for (const auto& i : mem)
+    grp.push_back(i);
+  make_group("Group0", grp, g);
 
   return g;
 }
