@@ -9,12 +9,38 @@
 //come to think of it...
 //it's pretty pointless to have a user define a distance, and then reaping all the credits for providing means of using it yourself...
 double distance( // g is not THE graph, it is any graph included -> shadowing
-              const int& vd1,
-              const int& vd2,
+              const VD& vd1,
+              const VD& vd2,
               const graph_t& g,
-              std::function<double(int,int,const graph_t&)> func){
+              std::function<double(VD,VD,const graph_t&)> func){
   return func(vd1, vd2, g);
 }
+
+
+//may need some sort of wildcard that always returns true when compared to predicates
+//'static' because otherwise the linker will get troubled... possibly not needed when template<..>
+auto get_vds(const graph_t& g, const std::string& t, unsigned int i){
+  std::vector<VD> res;
+  auto range = boost::vertices(g);
+    std::for_each(range.first, range.second, [&](const auto & vd)
+      {
+        if(g[vd].type==t && g[vd].index==i)
+          res.push_back(vd);
+      });
+  return res;
+}	
+
+auto get_vds_by_type(const graph_t& g, const std::string& t){
+  std::vector<unsigned VD> res;
+  auto range = boost::vertices(g);
+    std::for_each(range.first, range.second, [&](const auto & vd)
+      {
+        if(g[vd].type==t)
+          res.push_back(vd);
+      });
+  return res;
+}	
+
 
 
 //name may be a bit misleading TODO: translation of hwloc_obj->type to string
@@ -84,9 +110,9 @@ graph_t init_graph(const hwloc_topology_t & t){
 
   //query all the special types and insert into graph TODO
   //first all the memory for testing
-  auto obj = hwloc_get_obj_by_type(t, HWLOC_OBJ_NUMANODE, 0);
   auto nobj = hwloc_get_nbobjs_by_type(t, HWLOC_OBJ_NUMANODE);
   for (int i = 0; i<nobj; ++i){  
+    auto obj = hwloc_get_obj_by_type(t, HWLOC_OBJ_NUMANODE, i);
     boost::add_vertex(
         {obj_type_toString(obj), //type
          obj->logical_index},    //index
@@ -101,7 +127,7 @@ graph_t init_graph(const hwloc_topology_t & t){
   for (depth = 0; depth < max_depth; depth++) {
     std::cout << "adding Objects at level to graph: " <<  depth << std::endl;
     for (unsigned int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); ++i) {
-      obj = hwloc_get_obj_by_depth(t, depth, i);
+      auto obj = hwloc_get_obj_by_depth(t, depth, i);
       auto v = boost::add_vertex(
          {obj_type_toString(obj), //type
           obj->logical_index},    //index
@@ -174,6 +200,9 @@ graph_t init_graph(const hwloc_topology_t & t){
   auto grp = get_vds_by_type(g,"HWLOC_OBJ_CORE");
   auto mem = get_vds_by_type(g,"HWLOC_OBJ_NUMANODE");
 
+ // auto grp = get_vds(g,"HWLOC_OBJ_CORE");
+ // auto mem = get_vds(g,"HWLOC_OBJ_NUMANODE");
+
   for (const auto& i : mem)
     grp.push_back(i);
   make_group("Group0", grp, g);
@@ -181,4 +210,31 @@ graph_t init_graph(const hwloc_topology_t & t){
   return g;
 }
 
+
+////little helper
+////container that returns a distance value (so only readable) 
+//
+//
+//
+//
+////Dijkstra
+////returns path (list of vds and eds) from va to vb in graph g with respect to distance function fun
+//std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,graph_t)> func){
+//  vector<double> distances(num_vertices(g));
+//  dijkstra_shortest_paths(
+//      g,  //graph
+//      va, //source
+//     // weight_map(&edge::distance,g).distance_map( 
+//     //     make_iterator_property_map(
+//     //         distances.begin(),
+//     //         get(vertex_index, map) 
+//     //     )
+//     // )
+//      
+//  );
+////should we make a distance matrix with respect to a distance function?
+////functions need to choose edge types
+////... or their own graph altogether...
+//
+//}
 

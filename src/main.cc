@@ -82,9 +82,9 @@ int main ()
   auto g = init_graph(t);
 //TODO expand graph!
   //cleaning up:
-  hwloc_topology_destroy(t);
-  //since data was copied hwloc is not needed anymore
+  hwloc_topology_destroy(t); //since data was copied hwloc is not needed anymore
   
+  //some testing:
   //make group - at first arbitraty
   //TODO find partitioning
   std::vector<int> vs = {4,5};
@@ -92,20 +92,35 @@ int main ()
   std::cout << " group 1 has vd: " << i << std::endl; 
   //calc custom distance
   //define a distance function:
-  std::function<double(int,int,graph_t)> dist1 =  [&](int va,int vb, const graph_t& g)
+  std::function<double(int,int,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
     {
       double res = 130.0;
-      ////candidate for querying edges - potentially wasteful to first narrow it down...
-      //auto range = boost::edge_range(va, vb, g);
-      ////check all edges for label "parent"
-      //std::for_each (range.first, range.second,[&](const auto & ei){
-      //  if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
-      //    res = 0.0;
-      //});
+//      //candidate for querying edges - potentially wasteful to first narrow it down...
+//      //or maybe straight up impossible due to graph type limitations..?
+//      auto range = boost::edge_range(va, vb, g);
+//      //check all edges for label "parent"
+//      std::for_each (range.first, range.second,[&](const auto & ei){
+//        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
+//          res = 0.0;
+//      });
+
+      auto range = boost::edges(g);
+      //check all edges for label "parent"
+      std::for_each (range.first, range.second,[&](const auto & ei){
+        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
+          res = 0.0;
+      });
+
       return res;
     };
   std::cout << "distance (5,7): " << distance(5,7,g, dist1) << std::endl;
   std::cout << "distance (6,7): " << distance(6,7,g, dist1) << std::endl;
+
+  //auto path = shortest_path(g, 5, 7, dist1); 
+  //for (auto i : path){
+  //  std::cout << i << " ";
+  //} 
+  //std::cout << std::endl;
 
   make_dotfile(g);
 
