@@ -3,15 +3,20 @@
 #include <hwloc.h>
 #include <vector>
 #include <functional>
+#include <boost/config.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/property_map/function_property_map.hpp>
 #include "../include/init_graph.h"
 
-//come to think of it...
-//it's pretty pointless to have a user define a distance, and then reaping all the credits for providing means of using it yourself...
-double distance( // g is not THE graph, it is any graph included -> shadowing
-              const VD& vd1,
-              const VD& vd2,
-              const graph_t& g,
+//this is the interface, which simply uses the distance function.
+//it is recommended, to make the distance function not point to a certain graph, but to leave that as a parameter
+double distance( 
+              VD vd1,
+              VD vd2,
+              const graph_t& g,  // g is not THE graph, it is any graph included -> shadowing
               std::function<double(VD,VD,const graph_t&)> func){
   return func(vd1, vd2, g);
 }
@@ -28,18 +33,35 @@ auto get_vds(const graph_t& g, const std::string& t, unsigned int i){
           res.push_back(vd);
       });
   return res;
-}	
+} 
 
 auto get_vds_by_type(const graph_t& g, const std::string& t){
   std::vector<unsigned VD> res;
   auto range = boost::vertices(g);
-    std::for_each(range.first, range.second, [&](const auto & vd)
+    std::for_each(range.first, range.second, [&](const auto& vd)
       {
         if(g[vd].type==t)
           res.push_back(vd);
-      });
+      }
+    );
   return res;
-}	
+} 
+
+
+//query the ed for the edge from va to vb with category EType (std::string)
+auto get_ed(const graph_t& g, VD va, VD vb, const EType& label){ //<- this one needs to be auto as ED is no trivial type 
+  std::vector<ED> res;
+  auto range = boost::edges(g);
+  std::for_each(range.first, range.second,[&](const auto& ed)
+      {
+        if( boost::source(ed,g)==va && 
+            boost::target(ed,g)==vb &&
+            g[ed].label==label)
+          res.push_back(ed);
+      }
+  );
+  return res;
+}
 
 
 
@@ -139,27 +161,21 @@ graph_t init_graph(const hwloc_topology_t & t){
       //from a childs point of view - the parent will have been added already and can be queried. Otherwise it would be necessary to find blank vertices and attach attributes to make them distinguishable  (alternative approach would be a depth first traversal, however parenthood can be over more than one level of depth) maybe TODO
       //question remains how memory plays into this...
       //find all the parents:
-      std::vector<int> pa_id;
-      std::for_each(vertices(g).first, vertices(g).second,[&](const auto & vd){
-        //find out who the parent is
-        auto pa_obj = obj->parent;
-        if (g[vd].type == obj_type_toString(pa_obj) && g[vd].index == pa_obj->logical_index){
-          pa_id.push_back(vd);
-  }
-      });
-      for(auto & p : pa_id){ // for not necessary as in a tree (hwloc) there is only one parent)
+      auto pa_obj = obj->parent;
+      auto pa_id = get_vds(g, obj_type_toString(pa_obj), pa_obj->logical_index);
+      for(auto & p : pa_id){ // "for" not necessary in a tree (hwloc) there is only one parent, but maybe aliases...)
         // child
         if (boost::add_edge(
         v, //out
         p, //in
-        {"child"}, // edge property
+        {"child", 10.0}, // edge property
         g).second)
           {std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;}
         // parent
         if (boost::add_edge(
         p, //out
         v, //in
-        {"parent"}, // edge property
+        {"parent", 0.0}, // edge property
         g).second)
           {std::cout << "Added Edge: (from " << p << " to " << v << ", label: parent" << std::endl;}
         //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
@@ -182,14 +198,14 @@ graph_t init_graph(const hwloc_topology_t & t){
     if (boost::add_edge( // the "if" may be unnecessary, because the container allows for parallel edges 
     v, //out - the numa node vertices are being constructed first, so their vd is the index i 
     p, //in
-    {"child"}, // edge property
+    {"child", 10.0}, // edge property
     g).second)
       {std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;}
     // parent
     if (boost::add_edge(
     p, //out
     v, //in
-    {"parent"}, // edge property
+    {"parent", 0.0}, // edge property
     g).second)
       {std::cout << "Added Edge: (from " << p << " to " << v << ", label: parent" << std::endl;}
     //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
@@ -217,24 +233,35 @@ graph_t init_graph(const hwloc_topology_t & t){
 //
 //
 //
-////Dijkstra
-////returns path (list of vds and eds) from va to vb in graph g with respect to distance function fun
-//std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,graph_t)> func){
-//  vector<double> distances(num_vertices(g));
-//  dijkstra_shortest_paths(
-//      g,  //graph
-//      va, //source
-//     // weight_map(&edge::distance,g).distance_map( 
-//     //     make_iterator_property_map(
-//     //         distances.begin(),
-//     //         get(vertex_index, map) 
-//     //     )
-//     // )
-//      
-//  );
-////should we make a distance matrix with respect to a distance function?
-////functions need to choose edge types
-////... or their own graph altogether...
-//
-//}
+//Dijkstra
+//returns path (list of vds and eds) from va to vb in graph g with respect to distance function fun TODO maybe...
+//function property needs to heavily penalise edge categories, that are not supposed to be used -> via function, i.e.in the hands of the user. however reachability would not be absolute, only difficult (as in 1e31)
+//...or copy graph and only use the allowed edges -> reachability would be absolute
+auto shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
+  std::vector<double> distances(num_vertices(g));
+  //helper function to get the input right
+  std::function<double(ED)> f = [&](const auto& ed)
+    {
+      auto va = boost::source(ed, g);
+      auto vb = boost::target(ed, g); 
+      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
+    };
+  boost::dijkstra_shortest_paths(
+      g,  //graph
+      va, //source
+      //weight_map(get(&Edge::weight, g))
+      boost::weight_map(boost::make_function_property_map<decltype(f),ED>(f)).distance_map( 
+          boost::make_iterator_property_map(
+              distances.begin(),
+              get(boost::vertex_index, g) 
+          )
+      )
+  );
+  return distances; //TODO right now this returns distance to all reachable vertices 
+}
+//should we make a distance matrix with respect to a distance function?
+//functions need to choose edge types
+//... or their own graph altogether...
+
+
 

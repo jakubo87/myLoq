@@ -89,7 +89,8 @@ int main ()
   //TODO find partitioning
   std::vector<int> vs = {4,5};
   auto i = make_group("Group1", vs, g);
-  std::cout << " group 1 has vd: " << i << std::endl; 
+  std::cout << " group1 has vd: " << i << std::endl; 
+
   //calc custom distance
   //define a distance function:
   std::function<double(int,int,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
@@ -116,11 +117,14 @@ int main ()
   std::cout << "distance (5,7): " << distance(5,7,g, dist1) << std::endl;
   std::cout << "distance (6,7): " << distance(6,7,g, dist1) << std::endl;
 
-  //auto path = shortest_path(g, 5, 7, dist1); 
-  //for (auto i : path){
-  //  std::cout << i << " ";
-  //} 
-  //std::cout << std::endl;
+  //auto vds = test_get_vds(g, std::string("Group0"));
+  //std::cout << "testing generic querying for vds... Group0 has vd: " << vds[0] << std::endl;
+
+  auto dists = shortest_path(g, 5, 7, dist1); 
+  for (auto i : dists){
+    std::cout << i << " ";
+  } 
+  std::cout << std::endl;
 
   make_dotfile(g);
 

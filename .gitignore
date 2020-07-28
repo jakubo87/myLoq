@@ -7,4 +7,5 @@ hwloc-git/
 *.a
 *.svg
 *.pdf
+*.gch
 hwloc-test
