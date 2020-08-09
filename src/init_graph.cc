@@ -23,9 +23,8 @@ double distance(
 
 
 //may need some sort of wildcard that always returns true when compared to predicates
-//'static' because otherwise the linker will get troubled... possibly not needed when template<..>
-auto get_vds(const graph_t& g, const std::string& t, unsigned int i){
-  std::vector<VD> res;
+std::vector<VD> get_vds(const graph_t& g, const std::string& t, Index i){
+  std::vector<VD> res;  //<- necessary to always have something to return even if nothing matches
   auto range = boost::vertices(g);
     std::for_each(range.first, range.second, [&](const auto & vd)
       {
@@ -35,8 +34,8 @@ auto get_vds(const graph_t& g, const std::string& t, unsigned int i){
   return res;
 } 
 
-auto get_vds_by_type(const graph_t& g, const std::string& t){
-  std::vector<unsigned VD> res;
+std::vector<VD> get_vds_by_type(const graph_t& g, const std::string& t){
+  std::vector<VD> res;
   auto range = boost::vertices(g);
     std::for_each(range.first, range.second, [&](const auto& vd)
       {
@@ -48,8 +47,8 @@ auto get_vds_by_type(const graph_t& g, const std::string& t){
 } 
 
 
-//query the ed for the edge from va to vb with category EType (std::string)
-auto get_ed(const graph_t& g, VD va, VD vb, const EType& label){ //<- this one needs to be auto as ED is no trivial type 
+//query the ed for the edge from va to vb with label (std::string)
+std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType& label){
   std::vector<ED> res;
   auto range = boost::edges(g);
   std::for_each(range.first, range.second,[&](const auto& ed)
@@ -63,33 +62,38 @@ auto get_ed(const graph_t& g, VD va, VD vb, const EType& label){ //<- this one n
   return res;
 }
 
+//can only be const... or can it..?
+const EType& get_edge_label(const graph_t& g, const ED& ed){
+  return g[ed].label;
+}
+
 
 
 //name may be a bit misleading TODO: translation of hwloc_obj->type to string
 std::string obj_type_toString(hwloc_obj_t & obj){
   switch (obj->type) {
-    case HWLOC_OBJ_MACHINE :  return std::string("HWLOC_OBJ_MACHINE");
-    case HWLOC_OBJ_PACKAGE :  return "HWLOC_OBJ_PACKAGE";
-    case HWLOC_OBJ_CORE :     return "HWLOC_OBJ_CORE";
-    case HWLOC_OBJ_PU :       return "HWLOC_OBJ_PU";
-    case HWLOC_OBJ_L1CACHE :  return "HWLOC_OBJ_L1CACHE";
-    case HWLOC_OBJ_L2CACHE :  return "HWLOC_OBJ_L2CACHE";
-    case HWLOC_OBJ_L3CACHE :  return "HWLOC_OBJ_L3CACHE";
-    case HWLOC_OBJ_L4CACHE :  return "HWLOC_OBJ_L4CACHE";
-    case HWLOC_OBJ_L5CACHE :  return "HWLOC_OBJ_L5CACHE";
-    case HWLOC_OBJ_L1ICACHE : return "HWLOC_OBJ_L1ICACHE";
-    case HWLOC_OBJ_L2ICACHE : return "HWLOC_OBJ_L2ICACHE";
-    case HWLOC_OBJ_L3ICACHE : return "HWLOC_OBJ_L3ICACHE";
-    case HWLOC_OBJ_GROUP : return "HWLOC_OBJ_GROUP";
-    case HWLOC_OBJ_NUMANODE : return "HWLOC_OBJ_NUMANODE";
-    case HWLOC_OBJ_BRIDGE : return "HWLOC_OBJ_BRIDGE";
-    case HWLOC_OBJ_PCI_DEVICE : return "HWLOC_OBJ_PCI_DEVICE";
-    case HWLOC_OBJ_OS_DEVICE : return "HWLOC_OBJ_OS_DEVICE";
-    case HWLOC_OBJ_MISC : return "HWLOC_OBJ_MISC";
-    case HWLOC_OBJ_MEMCACHE : return "HWLOC_OBJ_MEMCACHE";
-    case HWLOC_OBJ_DIE : return "HWLOC_OBJ_DIE";
-    case HWLOC_OBJ_TYPE_MAX : return "HWLOC_OBJ_TYPE_MAX"; //not in docu! TODO
-    default : return "HWLOC_CUSTOM_OBJ";
+    case HWLOC_OBJ_MACHINE    :  return "HWLOC_OBJ_MACHINE";
+    case HWLOC_OBJ_PACKAGE    :  return "HWLOC_OBJ_PACKAGE";
+    case HWLOC_OBJ_CORE       :  return "HWLOC_OBJ_CORE";
+    case HWLOC_OBJ_PU         :  return "HWLOC_OBJ_PU";
+    case HWLOC_OBJ_L1CACHE    :  return "HWLOC_OBJ_L1CACHE";
+    case HWLOC_OBJ_L2CACHE    :  return "HWLOC_OBJ_L2CACHE";
+    case HWLOC_OBJ_L3CACHE    :  return "HWLOC_OBJ_L3CACHE";
+    case HWLOC_OBJ_L4CACHE    :  return "HWLOC_OBJ_L4CACHE";
+    case HWLOC_OBJ_L5CACHE    :  return "HWLOC_OBJ_L5CACHE";
+    case HWLOC_OBJ_L1ICACHE   :  return "HWLOC_OBJ_L1ICACHE";
+    case HWLOC_OBJ_L2ICACHE   :  return "HWLOC_OBJ_L2ICACHE";
+    case HWLOC_OBJ_L3ICACHE   :  return "HWLOC_OBJ_L3ICACHE";
+    case HWLOC_OBJ_GROUP      :  return "HWLOC_OBJ_GROUP";
+    case HWLOC_OBJ_NUMANODE   :  return "HWLOC_OBJ_NUMANODE";
+    case HWLOC_OBJ_BRIDGE     :  return "HWLOC_OBJ_BRIDGE";
+    case HWLOC_OBJ_PCI_DEVICE :  return "HWLOC_OBJ_PCI_DEVICE";
+    case HWLOC_OBJ_OS_DEVICE  :  return "HWLOC_OBJ_OS_DEVICE";
+    case HWLOC_OBJ_MISC       :  return "HWLOC_OBJ_MISC";
+    case HWLOC_OBJ_MEMCACHE   :  return "HWLOC_OBJ_MEMCACHE";
+    case HWLOC_OBJ_DIE        :  return "HWLOC_OBJ_DIE";
+    case HWLOC_OBJ_TYPE_MAX   :  return "HWLOC_OBJ_TYPE_MAX"; //not in docu! TODO
+    default                   :  return "HWLOC_CUSTOM_OBJ";
   };
 }
 
@@ -148,7 +152,7 @@ graph_t init_graph(const hwloc_topology_t & t){
 
   for (depth = 0; depth < max_depth; depth++) {
     std::cout << "adding Objects at level to graph: " <<  depth << std::endl;
-    for (unsigned int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); ++i) {
+    for (Index i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); ++i) {
       auto obj = hwloc_get_obj_by_depth(t, depth, i);
       auto v = boost::add_vertex(
          {obj_type_toString(obj), //type
@@ -237,28 +241,28 @@ graph_t init_graph(const hwloc_topology_t & t){
 //returns path (list of vds and eds) from va to vb in graph g with respect to distance function fun TODO maybe...
 //function property needs to heavily penalise edge categories, that are not supposed to be used -> via function, i.e.in the hands of the user. however reachability would not be absolute, only difficult (as in 1e31)
 //...or copy graph and only use the allowed edges -> reachability would be absolute
-auto shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
-  std::vector<double> distances(num_vertices(g));
-  //helper function to get the input right
-  std::function<double(ED)> f = [&](const auto& ed)
-    {
-      auto va = boost::source(ed, g);
-      auto vb = boost::target(ed, g); 
-      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
-    };
-  boost::dijkstra_shortest_paths(
-      g,  //graph
-      va, //source
-      //weight_map(get(&Edge::weight, g))
-      boost::weight_map(boost::make_function_property_map<decltype(f),ED>(f)).distance_map( 
-          boost::make_iterator_property_map(
-              distances.begin(),
-              get(boost::vertex_index, g) 
-          )
-      )
-  );
-  return distances; //TODO right now this returns distance to all reachable vertices 
-}
+//auto shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
+//  std::vector<double> distances(num_vertices(g));
+//  //helper function to get the input right
+//  std::function<double(ED)> f = [&](const auto& ed)
+//    {
+//      auto va = boost::source(ed, g);
+//      auto vb = boost::target(ed, g); 
+//      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
+//    };
+//  boost::dijkstra_shortest_paths(
+//      g,  //graph
+//      va, //source
+//      //weight_map(get(&Edge::weight, g))
+//      boost::weight_map(boost::make_function_property_map<decltype(f),ED>(f)).distance_map( 
+//          boost::make_iterator_property_map(
+//              distances.begin(),
+//              get(boost::vertex_index, g) 
+//          )
+//      )
+//  );
+//  return distances; //TODO right now this returns distance to all reachable vertices 
+//}
 //should we make a distance matrix with respect to a distance function?
 //functions need to choose edge types
 //... or their own graph altogether...

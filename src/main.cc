@@ -84,13 +84,34 @@ int main ()
   //cleaning up:
   hwloc_topology_destroy(t); //since data was copied hwloc is not needed anymore
   
-  //some testing:
+
+
+  //###################################################################
+  //TESTS:
+  
+  //BASICS:
+  //find vd 
+  auto vds =get_vds(
+		  g,                //the graph
+		  "HWLOC_OBJ_CORE", //the type
+		  0);               //the index
+
+  std::cout << "vd of core 0: " << vds[0] << std::endl;
+
+  
+  //find edge properties
+  std::cout << "ed label from vd 1 to 2: " << get_edge_label(g, get_ed(g,1,2,"parent").at(0)) << std::endl;
+
+  //find edge property
+
+
+  //GROUPS
   //make group - at first arbitraty
-  //TODO find partitioning
   std::vector<int> vs = {4,5};
   auto i = make_group("Group1", vs, g);
-  std::cout << " group1 has vd: " << i << std::endl; 
+  std::cout << " Group1 has vd: " << i << std::endl; 
 
+  //DISTANCES
   //calc custom distance
   //define a distance function:
   std::function<double(int,int,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
@@ -117,14 +138,19 @@ int main ()
   std::cout << "distance (5,7): " << distance(5,7,g, dist1) << std::endl;
   std::cout << "distance (6,7): " << distance(6,7,g, dist1) << std::endl;
 
+  //TODO generic vd query
   //auto vds = test_get_vds(g, std::string("Group0"));
   //std::cout << "testing generic querying for vds... Group0 has vd: " << vds[0] << std::endl;
 
-  auto dists = shortest_path(g, 5, 7, dist1); 
-  for (auto i : dists){
-    std::cout << i << " ";
-  } 
-  std::cout << std::endl;
+  //auto dists = shortest_path(g, 5, 7, dist1); 
+  //for (auto i : dists){
+  //  std::cout << i << " ";
+  //} 
+  //std::cout << std::endl;
+
+  //TODO find partitioning
+
+  //TODO return subgraph
 
   make_dotfile(g);
 
