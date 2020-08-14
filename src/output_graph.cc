@@ -9,8 +9,9 @@ class label_writer {
 public:
   template <class VertexOrEdge>
   void operator()(std::ostream& out, const VertexOrEdge& v) const {
-    out << "[label=\"" << v.name << " #" << v.index << "\"]";
+    out << "[label=\"" << g[v].type << " #" << g[v].index << "\"]";
   }
+  const graph_t& g;
 };
 
 
@@ -21,6 +22,7 @@ public:
 void make_dotfile(const graph_t & g){
   const std::string dotf = "out.dot";
   std::ofstream dot(dotf);
-  boost::write_graphviz(dot, g);//, label_writer()); //std::cout, g); //, label_writer());
+  label_writer lw{g};
+  boost::write_graphviz(dot, g, lw); //lw());
   std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
 }

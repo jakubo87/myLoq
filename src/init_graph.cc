@@ -231,14 +231,17 @@ graph_t init_graph(const hwloc_topology_t & t){
 }
 
 
-////little helper
-////container that returns a distance value (so only readable) 
-//
-//
-//
-//
+
+//#######STAGING AREA
+
+
+
+
+
 //Dijkstra
-//returns path (list of vds and eds) from va to vb in graph g with respect to distance function fun TODO maybe...
+//returns deduced/accumulated distances
+//i.e.: if there is no direct connection in a category, hops and penalties of known edges are accumulated along the path. The function is thereby recursive and needs to add a large penalty value if 2 vertices have no direct edge. This is still different from general reachability, which will eventually result from such calculation 
+//
 //function property needs to heavily penalise edge categories, that are not supposed to be used -> via function, i.e.in the hands of the user. however reachability would not be absolute, only difficult (as in 1e31)
 //...or copy graph and only use the allowed edges -> reachability would be absolute
 //auto shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){

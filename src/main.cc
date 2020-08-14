@@ -91,10 +91,10 @@ int main ()
   
   //BASICS:
   //find vd 
-  auto vds =get_vds(
-		  g,                //the graph
-		  "HWLOC_OBJ_CORE", //the type
-		  0);               //the index
+  auto vds = get_vds(
+      g,                //the graph
+      "HWLOC_OBJ_CORE", //the type
+      0);               //the index
 
   std::cout << "vd of core 0: " << vds[0] << std::endl;
 
@@ -102,35 +102,30 @@ int main ()
   //find edge properties
   std::cout << "ed label from vd 1 to 2: " << get_edge_label(g, get_ed(g,1,2,"parent").at(0)) << std::endl;
 
-  //find edge property
-
 
   //GROUPS
   //make group - at first arbitraty
-  std::vector<int> vs = {4,5};
+  std::vector<VD> vs = {4,5};
   auto i = make_group("Group1", vs, g);
   std::cout << " Group1 has vd: " << i << std::endl; 
 
   //DISTANCES
   //calc custom distance
   //define a distance function:
-  std::function<double(int,int,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
+  std::function<double(VD,VD,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
     {
-      double res = 130.0;
-//      //candidate for querying edges - potentially wasteful to first narrow it down...
-//      //or maybe straight up impossible due to graph type limitations..?
-//      auto range = boost::edge_range(va, vb, g);
-//      //check all edges for label "parent"
-//      std::for_each (range.first, range.second,[&](const auto & ei){
-//        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
-//          res = 0.0;
-//      });
-
+      //the result, if the graph has no direct edge in any allowed category defined by this function
+      double res = NOPATH;  //default 
       auto range = boost::edges(g);
+      //check all edges for label "child"
+       std::for_each (range.first, range.second,[&](const auto & ei){
+        if (g[ei].label=="child" && va==source(ei,g) && vb==target(ei,g))
+          res = 10.0;       //case of rising in the hierarchy
+      });
       //check all edges for label "parent"
       std::for_each (range.first, range.second,[&](const auto & ei){
         if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
-          res = 0.0;
+          res = 0.0;        //case when descending in hierarchy
       });
 
       return res;

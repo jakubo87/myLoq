@@ -13,6 +13,7 @@ using VType = std::string;
 using EType = std::string;
 using Index = unsigned int;
 
+const double NOPATH = 10.000;
 
 //not accessible via std::get<type>
 struct Vertex {
@@ -32,7 +33,7 @@ using graph_t = boost::adjacency_list<
                      boost::bidirectionalS, //sets bidirectional edge access
                      Vertex,                //vertex property
                      Edge,                  //edge property (see bundled properties)
-                     boost::no_property,    //graph property (bundled properties)
+                     boost::no_property,    //graph property 
                      boost::multisetS>;     //edge container selector... again? 
 
 using VD = graph_t::vertex_descriptor;
@@ -58,7 +59,7 @@ std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType&);
 
 const EType& get_edge_label(const graph_t& g, const ED& ed);
 
-//returns path (list of vds and eds) from va to vb in graph g with respect to distance function func
+//returns the shortest distance when no direct edge is available, accumulating distances
 //auto shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
 
 //TODO list:
