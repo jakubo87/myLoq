@@ -213,7 +213,7 @@ graph_t init_graph(const hwloc_topology_t & t){
     g).second)
       {std::cout << "Added Edge: (from " << p << " to " << v << ", label: parent" << std::endl;}
     //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
-    //what is the multiset selector in edge list good for them..? TODO
+    //what is the multiset selector in edge list good for then..? 
   }
 
   //make default group with all memory and all cores

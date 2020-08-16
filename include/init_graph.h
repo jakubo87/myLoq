@@ -32,9 +32,10 @@ using graph_t = boost::adjacency_list<
                      boost::vecS, //  Vector container selector
                      boost::bidirectionalS, //sets bidirectional edge access
                      Vertex,                //vertex property
-                     Edge,                  //edge property (see bundled properties)
-                     boost::no_property,    //graph property 
-                     boost::multisetS>;     //edge container selector... again? 
+                     Edge>;                  //edge property (see bundled properties)
+// the following settings seem to contradict some internal details of the adjacency list when using out_edges (hypothesis)
+                     //boost::no_property,    //graph property 
+                     //boost::multisetS>;     //edge container selector... again? 
 
 using VD = graph_t::vertex_descriptor;
 using ED = graph_t::edge_descriptor;

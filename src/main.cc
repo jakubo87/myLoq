@@ -145,6 +145,12 @@ int main ()
 
   //TODO find partitioning
 
+  //ancestry iterator
+  std::cout << "is 3 an ancestor of 11?: " << is_ancestor(11,3,g) << std::endl;
+  std::cout << "is 11 an ancestor of 3?: " << is_ancestor(3,11,g) << std::endl;
+
+
+
   //TODO return subgraph
 
   make_dotfile(g);
