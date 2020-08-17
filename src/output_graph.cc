@@ -4,7 +4,6 @@
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
 #include <boost/graph/graphviz.hpp>
-//#include <boost/graph/graph_utility.hpp>
 
 
 //####### Printing the graph
@@ -24,7 +23,7 @@ public:
 void make_dotfile(const graph_t & g){
   const std::string dotf = "out.dot";
   std::ofstream dot(dotf);
-  label_writer lw{g};   //constructor declaring what graph to use to use the label_writer as a functor
+  label_writer lw{g};   //constructor declaring what graph to use, to use the label_writer as a functor
   boost::write_graphviz(dot, g, lw, lw);
   std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
 }

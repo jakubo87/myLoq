@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include <boost/config.hpp>
+#include <boost/array.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -244,28 +245,32 @@ graph_t init_graph(const hwloc_topology_t & t){
 //
 //function property needs to heavily penalise edge categories, that are not supposed to be used -> via function, i.e.in the hands of the user. however reachability would not be absolute, only difficult (as in 1e31)
 //...or copy graph and only use the allowed edges -> reachability would be absolute
-//auto shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
-//  std::vector<double> distances(num_vertices(g));
-//  //helper function to get the input right
+double shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
+  boost::array<double,100> distances;
+  //helper function to get the input right
 //  std::function<double(ED)> f = [&](const auto& ed)
 //    {
 //      auto va = boost::source(ed, g);
 //      auto vb = boost::target(ed, g); 
 //      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
 //    };
-//  boost::dijkstra_shortest_paths(
-//      g,  //graph
-//      va, //source
-//      //weight_map(get(&Edge::weight, g))
-//      boost::weight_map(boost::make_function_property_map<decltype(f),ED>(f)).distance_map( 
-//          boost::make_iterator_property_map(
-//              distances.begin(),
-//              get(boost::vertex_index, g) 
-//          )
-//      )
-//  );
-//  return distances; //TODO right now this returns distance to all reachable vertices 
-//}
+  boost::dijkstra_shortest_paths(
+      g,  //graph
+      va, //source
+      boost::predecessor_map(distances.begin()).
+    weight_map(boost::get(&Edge::weight, g)));
+
+ //     weight_map(get(&Edge::weight, g))
+ //     //boost::weight_map(boost::make_function_property_map<decltype(f),ED>(f))
+ //     .distance_map( 
+ //         boost::make_iterator_property_map(
+ //             distances.begin(),
+ //             get(boost::vertex_index, g) 
+ //         )
+ //     )
+ // );
+  return distances[vb]; //TODO right now this returns distance to all reachable vertices 
+}
 //should we make a distance matrix with respect to a distance function?
 //functions need to choose edge types
 //... or their own graph altogether...

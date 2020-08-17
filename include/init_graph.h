@@ -61,7 +61,7 @@ std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType&);
 const EType& get_edge_label(const graph_t& g, const ED& ed);
 
 //returns the shortest distance when no direct edge is available, accumulating distances
-//auto shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
+double shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
 
 //TODO list:
 //partitioning balanced/evenly or with respect to distances in cores

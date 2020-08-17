@@ -9,7 +9,7 @@ void make_dotfile(const graph_t & g);
 bool is_ancestor(const VD& va, const VD& vb, const graph_t& g); //containment?!
 
 //graph_t make_subgraph(const graph_t& g, const VD& gv);
-//TODO make tree view??? only project on canonical tree
+//graph_t make_tree();
 
 //goto parent iterator
 class anc_iterator{

@@ -137,11 +137,7 @@ int main ()
   //auto vds = test_get_vds(g, std::string("Group0"));
   //std::cout << "testing generic querying for vds... Group0 has vd: " << vds[0] << std::endl;
 
-  //auto dists = shortest_path(g, 5, 7, dist1); 
-  //for (auto i : dists){
-  //  std::cout << i << " ";
-  //} 
-  //std::cout << std::endl;
+  std::cout << "shortest path 2->3 has length: " << shortest_path(g, 2, 3, dist1) << std::endl;
 
   //TODO find partitioning
 
