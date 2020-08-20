@@ -28,7 +28,12 @@ void make_dotfile(const graph_t & g){
   std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
 }
 
-
+void make_dotfile_nolabel(const graph_t & g){
+  const std::string dotf = "out.dot";
+  std::ofstream dot(dotf);
+  boost::write_graphviz(dot, g);
+  std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
+}
 
 
 //is va a descendent of vb?

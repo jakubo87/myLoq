@@ -13,7 +13,7 @@ using VType = std::string;
 using EType = std::string;
 using Index = unsigned int;
 
-const double NOPATH = 10.000;
+const double NOPATH = 10000;
 
 //not accessible via std::get<type>
 struct Vertex {
@@ -61,7 +61,9 @@ std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType&);
 const EType& get_edge_label(const graph_t& g, const ED& ed);
 
 //returns the shortest distance when no direct edge is available, accumulating distances
-double shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
+double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
+//for debugging..? prints predecessors...
+void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
 
 //TODO list:
 //partitioning balanced/evenly or with respect to distances in cores

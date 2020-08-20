@@ -137,7 +137,9 @@ int main ()
   //auto vds = test_get_vds(g, std::string("Group0"));
   //std::cout << "testing generic querying for vds... Group0 has vd: " << vds[0] << std::endl;
 
-  std::cout << "shortest path 2->3 has length: " << shortest_path(g, 2, 3, dist1) << std::endl;
+  std::cout << "distance (8,9): " << distance(8,9,g, dist1) << std::endl;
+  shortest_path(g, 8, 9, dist1); //<- TODO something is wrong... distance should be max
+  std::cout << "combined distance (8,9): " << find_distance(g,8,9,dist1) << std::endl;
 
   //TODO find partitioning
 
@@ -149,7 +151,7 @@ int main ()
 
   //TODO return subgraph
 
-  make_dotfile(g);
+  make_dotfile_nolabel(g);
 
   return 0;
 }

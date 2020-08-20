@@ -236,44 +236,79 @@ graph_t init_graph(const hwloc_topology_t & t){
 //#######STAGING AREA
 
 
-
-
-
 //Dijkstra
 //returns deduced/accumulated distances
 //i.e.: if there is no direct connection in a category, hops and penalties of known edges are accumulated along the path. The function is thereby recursive and needs to add a large penalty value if 2 vertices have no direct edge. This is still different from general reachability, which will eventually result from such calculation 
 //
 //function property needs to heavily penalise edge categories, that are not supposed to be used -> via function, i.e.in the hands of the user. however reachability would not be absolute, only difficult (as in 1e31)
 //...or copy graph and only use the allowed edges -> reachability would be absolute
-double shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
-  boost::array<double,100> distances;
-  //helper function to get the input right
-//  std::function<double(ED)> f = [&](const auto& ed)
-//    {
-//      auto va = boost::source(ed, g);
-//      auto vb = boost::target(ed, g); 
-//      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
-//    };
+double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
+ // boost::array<double,16> directions; //TODO dynamically allocating the array, or finding a different data structure
+ // boost::array<double,16> distances; //TODO dynamically allocating the array, or finding a different data structure
+
+  std::vector<VD> p(num_vertices(g));
+  std::vector<double> d(num_vertices(g));
+
+  //###helper function to get the input right
+  std::function<double(ED)> f = [&](const ED& ed)
+    {
+      auto va = boost::source(ed, g);
+      auto vb = boost::target(ed, g); 
+      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
+    };
+
+//define a functor..?
+
+
   boost::dijkstra_shortest_paths(
       g,  //graph
       va, //source
-      boost::predecessor_map(distances.begin()).
-    weight_map(boost::get(&Edge::weight, g)));
+      boost::weight_map(boost::function_property_map<decltype(f),ED,double>(f))
+      .predecessor_map(boost::make_iterator_property_map(
+                            p.begin(), get(boost::vertex_index, g)))
+      .distance_map(boost::make_iterator_property_map(
+                            d.begin(),get(boost::vertex_index, g)))
+  );
+ 
+ // VD p = vb; //target -> PREdecessor...
+ // while (p != va) //finish
+ // {
+ //   std::cout << p << '\n';
+ //   p = directions[p];
+ // }
+ // std::cout << p << '\n';
 
- //     weight_map(get(&Edge::weight, g))
- //     //boost::weight_map(boost::make_function_property_map<decltype(f),ED>(f))
- //     .distance_map( 
- //         boost::make_iterator_property_map(
- //             distances.begin(),
- //             get(boost::vertex_index, g) 
- //         )
- //     )
- // );
-  return distances[vb]; //TODO right now this returns distance to all reachable vertices 
+
+
+//
+// std::vector<double> temp(boost::num_vertices(g));
+// std::copy(distances.begin(),distances.end(),temp.begin());
+// for (auto i : temp){
+//   std::cout << distances[i] << " ";}
+// std::cout << std::endl;
+//
+//
+  return d[vb];
 }
-//should we make a distance matrix with respect to a distance function?
-//functions need to choose edge types
-//... or their own graph altogether...
 
 
 
+
+//Dijkstra
+//prints predeccessors from target to source (potentially for debugging..?)
+void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
+  boost::array<double,100> directions; //TODO dynamically allocating the array, or finding a different data structure
+  boost::dijkstra_shortest_paths(
+      g,  //graph
+      va, //source
+      boost::predecessor_map(directions.begin()).
+        weight_map(boost::get(&Edge::weight, g))); //TODO use the function...
+
+  VD p = vb; //target -> PREdecessor...
+  while (p != va) //finish
+  {
+    std::cout << p << ' ';
+    p = directions[p];
+  }
+  std::cout << p << std::endl;
+}
