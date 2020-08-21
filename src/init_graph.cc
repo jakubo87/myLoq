@@ -257,13 +257,12 @@ double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,
       return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
     };
 
-//define a functor..?
 
 
   boost::dijkstra_shortest_paths(
       g,  //graph
       va, //source
-      boost::weight_map(boost::function_property_map<decltype(f),ED,double>(f))
+      boost::weight_map(boost::function_property_map<decltype(f),ED,double>(f))//comment: do NOT(!!) use the make_function_propertymap() function. it fails to deduce correctly!
       .predecessor_map(boost::make_iterator_property_map(
                             p.begin(), get(boost::vertex_index, g)))
       .distance_map(boost::make_iterator_property_map(
@@ -297,12 +296,23 @@ double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,
 //Dijkstra
 //prints predeccessors from target to source (potentially for debugging..?)
 void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
-  boost::array<double,100> directions; //TODO dynamically allocating the array, or finding a different data structure
+  //boost::array<double,100> directions; //TODO dynamically allocating the array, or finding a different data structure comment: use std vector but make property iterator map as in the example
+  std::vector<VD> directions(num_vertices(g));
+
+  //###helper function to get the input right
+  std::function<double(ED)> f = [&](const ED& ed)
+    {
+      auto va = boost::source(ed, g);
+      auto vb = boost::target(ed, g); 
+      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
+    };
+
   boost::dijkstra_shortest_paths(
       g,  //graph
       va, //source
-      boost::predecessor_map(directions.begin()).
-        weight_map(boost::get(&Edge::weight, g))); //TODO use the function...
+      boost::weight_map(boost::function_property_map<decltype(f),ED,double>(f))
+      .predecessor_map(boost::make_iterator_property_map(
+                      directions.begin(), get(boost::vertex_index, g))));
 
   VD p = vb; //target -> PREdecessor...
   while (p != va) //finish

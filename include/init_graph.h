@@ -23,7 +23,7 @@ struct Vertex {
 
 struct Edge {
   EType label;
-  double weight; //this weight will probably be updated according to each use of distance function  
+  double weight=0; //this weight will probably be updated according to each use of distance function  
 };
 
 
