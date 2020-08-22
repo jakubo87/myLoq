@@ -98,6 +98,25 @@ int main ()
 
   std::cout << "vd of core 0: " << vds[0] << std::endl;
 
+  //generic vd query TODO does this also work when queries are generated at runtime...???
+  vds = test_get_vds(g, VType("HWLOC_OBJ_CORE"));
+  std::cout << "testing generic querying for vds... CORES have vd: " << std::endl;
+  for (auto& v : vds)
+    std::cout << v << " ";
+  std::cout << std::endl;
+  std::cout << "VDs with rubbish type: " << std::endl;
+  vds = test_get_vds(g, VType("xxx"));
+  for (auto& v : vds)
+    std::cout << v << " ";
+  std::cout << std::endl;
+  //  vds = test_get_vds(g, 1); <- does not compile you have to write the explicit type
+  std::cout << "VDs with 2 types in reverse order to what it is in the vertex struct: " << std::endl;
+  vds = test_get_vds(g, Index(1), VType("HWLOC_OBJ_CORE"));
+  for (auto& v : vds)
+    std::cout << v << " ";
+  std::cout << std::endl;
+
+
   
   //find edge properties
   std::cout << "ed label from vd 1 to 2: " << get_edge_label(g, get_ed(g,1,2,"parent").at(0)) << std::endl;
@@ -130,15 +149,14 @@ int main ()
 
       return res;
     };
+
+
   std::cout << "distance (5,7): " << distance(5,7,g, dist1) << std::endl;
   std::cout << "distance (6,7): " << distance(6,7,g, dist1) << std::endl;
 
-  //TODO generic vd query
-  //auto vds = test_get_vds(g, std::string("Group0"));
-  //std::cout << "testing generic querying for vds... Group0 has vd: " << vds[0] << std::endl;
-
   std::cout << "distance (8,9): " << distance(8,9,g, dist1) << std::endl;
-  shortest_path(g, 8, 9, dist1); //<- TODO something is wrong... distance should be max
+  std::cout << "path from 9 to 8:" << std::endl; 
+  shortest_path(g, 8, 9, dist1); 
   std::cout << "combined distance (8,9): " << find_distance(g,8,9,dist1) << std::endl;
 
   //TODO find partitioning
@@ -150,7 +168,7 @@ int main ()
 
 
   //TODO return subgraph
-
+  //TODO make dotfile overload to include filename
   make_dotfile_nolabel(g);
 
   return 0;

@@ -7,6 +7,7 @@
 #include <string>
 #include <functional>
 #include <tuple>
+#include <type_traits>
 
 
 using VType = std::string;
@@ -23,7 +24,7 @@ struct Vertex {
 
 struct Edge {
   EType label;
-  double weight=0; //this weight will probably be updated according to each use of distance function  
+  double weight=0; //TODO remove? 
 };
 
 
@@ -96,32 +97,32 @@ auto make_group(const std::string & name, const C & cont, graph_t & g){
   return v;
 }
 
-////check a tuple for its properties (type based)
-//// ending case for recursion
-//template <typename T>
-//inline bool check_props(T && t) {
-//  return true;
-//}
-//// Recursive case
-//template <typename T, typename P, typename... Args>
-//inline bool check_props(T&& t, P&& p, Args... args) {
-//  if (std::get<P>(t)!=p) return false;
-//  return check_props(t, args...);
-//}
-//
-////query the vd from properties
-//template<typename... Args>
-//auto test_get_vds(const graph_t& g, Args... args){
-//  std::vector<VD> res;
-//  auto range = boost::vertices(g);
-//    std::for_each(range.first, range.second, [&](const auto & vd)
-//      {
-//        auto t = std::make_tuple(g[vd].type,g[vd].index); 
-//        if(check_props(t,args...))
-//          res.push_back(vd);
-//      });
-//  return res;
-//} 
+//check a tuple for its properties (type based)
+// ending case for recursion
+template <typename T>
+constexpr bool check_props(T && t) {
+  return true;
+}
+//Recursive case
+template <typename T, typename P, typename... Args>
+constexpr bool check_props(T&& t, P&& p, Args... args) {
+  if (std::get<typename std::remove_reference<P>::type>(t)!=p) return false;
+  return check_props(t, args...);
+}
+
+
+//query the vd from properties
+template<typename... Args>
+constexpr auto test_get_vds(const graph_t& g, Args&& ... args){
+  std::vector<VD> res;
+  auto range = boost::vertices(g);
+  std::for_each(range.first, range.second, [&](const auto & vd)
+     {
+      if(check_props(std::make_tuple(g[vd].type,g[vd].index),args...))
+        res.push_back(vd);
+     });
+  return res;
+} 
 
 
 #endif
