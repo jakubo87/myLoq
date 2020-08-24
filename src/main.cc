@@ -169,7 +169,7 @@ int main ()
 
   //TODO return subgraph
   //TODO make dotfile overload to include filename
-  make_dotfile_nolabel(g);
+  make_dotfile_nolabel(g,"out1.dot");
 
   return 0;
 }

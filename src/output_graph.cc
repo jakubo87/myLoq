@@ -20,16 +20,14 @@ public:
   const graph_t& g;
 };
 
-void make_dotfile(const graph_t & g){
-  const std::string dotf = "out.dot";
+void make_dotfile(const graph_t & g, const std::string& dotf){
   std::ofstream dot(dotf);
   label_writer lw{g};   //constructor declaring what graph to use, to use the label_writer as a functor
   boost::write_graphviz(dot, g, lw, lw);
   std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
 }
 
-void make_dotfile_nolabel(const graph_t & g){
-  const std::string dotf = "out.dot";
+void make_dotfile_nolabel(const graph_t & g, const std::string& dotf){
   std::ofstream dot(dotf);
   boost::write_graphviz(dot, g);
   std::cout << "Graph has been written to dotfile: " << dotf << std::endl;

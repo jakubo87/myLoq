@@ -4,8 +4,8 @@
 #include <iostream>
 #include "init_graph.h"
 
-void make_dotfile(const graph_t & g);
-void make_dotfile_nolabel(const graph_t & g);
+void make_dotfile(const graph_t & g, const std::string& dotf = "out.dot");
+void make_dotfile_nolabel(const graph_t & g, const std::string& dotf = "out.dot");
 
 bool is_ancestor(const VD& va, const VD& vb, const graph_t& g); //containment?!
 
