@@ -41,8 +41,8 @@ bool is_ancestor(const VD& va, const VD& vb, const graph_t& g){
   anc_iterator it(g,va);
   VD vcur;
   do{
-    vcur=*it;     //update
-    if (vcur==vb){   //check
+    vcur=*it;      //update
+    if (vcur==vb){ //check
       res=true;    //success
       break;       //exit
     }
@@ -54,6 +54,22 @@ bool is_ancestor(const VD& va, const VD& vb, const graph_t& g){
 
 //TODO include all canonically connected (parent/child) vertices of included vertices in (group vertex) gv
 //// 1. define granularity by picking the depth/level in the group ("want the whole core? want only one PU, pick that!")
+//
+//
+//strips the graph from anything but the hwloc stuff TODO make a sub selection
+graph_t make_tree(const graph_t& s, const VD& gv){
+  graph_t g(s);
+
+  auto range = boost::edges(g);
+  std::for_each(range.first, range.second, [&](const auto& ed){
+    if (!(g[ed].label=="parent" || g[ed].label=="child")){
+      std::cout << "alive" << std::endl;
+      boost::remove_edge(ed,g);}}
+  );
+  return g;
+}
+
+
 //graph_t make_subgraph(const graph_t& s, const VD& gv){
 //  //1. copy the whole graph
 //  //2. look for all vertices that have no children if they are descendents of members of the group 

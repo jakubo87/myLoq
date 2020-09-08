@@ -1,1 +1,1 @@
-dot -Tsvg out.dot -o graph.svg
+dot -Tsvg *.dot -O

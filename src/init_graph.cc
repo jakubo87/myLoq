@@ -265,7 +265,7 @@ double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,
 
 
 
-//Dijkstra
+//Dijkstra TODO return value
 //prints predeccessors from target to source (potentially for debugging..?)
 void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
   std::vector<VD> directions(num_vertices(g));

@@ -120,6 +120,12 @@ int main ()
   
   //find edge properties
   std::cout << "ed label from vd 1 to 2: " << get_edge_label(g, get_ed(g,1,2,"parent").at(0)) << std::endl;
+  //find edges by their property
+  std::cout << "List all edges with the parent property:" << std::endl;
+  auto eds = get_eds(g, "parent");
+  for (const auto& ed : eds){
+    std::cout << boost::source(ed,g) << " to " << boost::target(ed,g) << std::endl;
+  }
 
 
   //GROUPS
@@ -157,7 +163,14 @@ int main ()
   std::cout << "distance (8,9): " << distance(8,9,g, dist1) << std::endl;
   std::cout << "path from 9 to 8:" << std::endl; 
   shortest_path(g, 8, 9, dist1); 
-  std::cout << "combined distance (8,9): " << find_distance(g,8,9,dist1) << std::endl;
+
+  //this returns the shortest distance found over multiple hops - or a direct edge - with respect to only a given distance function
+  std::cout << "combined distances from 8 to:" << std::endl;
+  for(long unsigned int i=0; i < boost::num_vertices(g); ++i){
+    std::cout << i << ": " ;
+    std::cout << find_distance(g,8,i,dist1) << std::endl;
+  }
+    
 
   //TODO find partitioning
 
@@ -169,7 +182,11 @@ int main ()
 
   //TODO return subgraph
   //TODO make dotfile overload to include filename
-  make_dotfile_nolabel(g,"out1.dot");
+  make_dotfile_nolabel(g,"totalnl.dot");
+  make_dotfile(g,"total.dot");
+
+  //auto g2 = make_tree(g,1);
+  //make_dotfile(g2,"hwloc.dot");
 
   return 0;
 }
