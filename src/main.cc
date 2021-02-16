@@ -110,7 +110,7 @@ int main ()
     std::cout << v << " ";
   std::cout << std::endl;
   //  vds = test_get_vds(g, 1); <- does not compile you have to write the explicit type
-  std::cout << "VDs with 2 types in reverse order to what it is in the vertex struct: " << std::endl;
+  std::cout << "searching for VD with type: CORE and index: 1 (testing maching in reverse order to what it is in the vertex struct): " << std::endl;
   vds = test_get_vds(g, Index(1), VType("HWLOC_OBJ_CORE"));
   for (auto& v : vds)
     std::cout << v << " ";
@@ -129,10 +129,15 @@ int main ()
 
 
   //GROUPS
-  //make group - at first arbitraty
-  std::vector<VD> vs = {4,5};
+  //make group - at first arbitrary
+  std::vector<VD> vs = {10,12};
   auto i = make_group("Group1", vs, g);
   std::cout << " Group1 has vd: " << i << std::endl; 
+
+  //return the group members of group 
+  std::cout << "The members of Group1 are the following:" << std::endl;
+  //TODO make path queries like "is connected to group", or "is 'child' of cache" 
+
 
   //DISTANCES
   //calc custom distance
@@ -181,7 +186,6 @@ int main ()
 
 
   //TODO return subgraph
-  //TODO make dotfile overload to include filename
   make_dotfile_nolabel(g,"totalnl.dot");
   make_dotfile(g,"total.dot");
 

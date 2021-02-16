@@ -110,6 +110,7 @@ constexpr bool check_props(T&& t, P&& p, Args... args) {
   if (std::get<typename std::remove_reference<P>::type>(t)!=p) return false;
   return check_props(t, args...);
 }
+
 //query the vd from properties
 template<typename... Args>
 constexpr auto test_get_vds(const graph_t& g, Args&& ... args){
