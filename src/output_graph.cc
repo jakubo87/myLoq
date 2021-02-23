@@ -52,22 +52,34 @@ bool is_ancestor(const VD& va, const VD& vb, const graph_t& g){
   return res;
 }
 
-//TODO include all canonically connected (parent/child) vertices of included vertices in (group vertex) gv
-//// 1. define granularity by picking the depth/level in the group ("want the whole core? want only one PU, pick that!")
-//
-//
-//strips the graph from anything but the hwloc stuff TODO make a sub selection
-graph_t make_tree(const graph_t& s, const VD& gv){
-  graph_t g(s);
 
-  auto range = boost::edges(g);
-  std::for_each(range.first, range.second, [&](const auto& ed){
-    if (!(g[ed].label=="parent" || g[ed].label=="child")){
-      std::cout << "alive" << std::endl;
-      boost::remove_edge(ed,g);}}
-  );
-  return g;
+//make canonical tree from root to all the elements in group by adding all the vertices along the shortest path with distance, that involves parent/child relationships (the dummy distance for now)
+graph_t make_can_tree(const graph_t& s , const VD& gv){
+//TODO remove excessive edges and insert vertex and edge properties
+  graph_t t; //target graph
+  auto range = boost::adjacent_vertices(gv,s);
+  //starting vertex is range.first
+  VD root_vd = 1;
+  std::for_each(range.first, range.second,
+      [&](const auto& vd)
+      {
+        anc_iterator a_it(s,vd);
+        while ( *a_it != root_vd){ //==1
+          VD curr =*a_it;
+          ++a_it; 
+          boost::add_edge(curr, *a_it, {"child", 0.0}, t);
+          boost::add_edge(*a_it, curr, {"parent", 0.0}, t);
+        }
+      }
+      );
+  std::cout << "created hwloc-tree of subgraph." << std::endl;
+  return t;
 }
+
+
+
+
+
 
 
 //graph_t make_subgraph(const graph_t& s, const VD& gv){

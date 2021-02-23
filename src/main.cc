@@ -189,8 +189,9 @@ int main ()
   make_dotfile_nolabel(g,"totalnl.dot");
   make_dotfile(g,"total.dot");
 
-  //auto g2 = make_tree(g,1);
-  //make_dotfile(g2,"hwloc.dot");
+  //isolate a subgraph and reduce to hwloc relationships
+  auto g2 = make_can_tree(g,14);
+  make_dotfile_nolabel(g2,"hwloc.dot");
 
   return 0;
 }

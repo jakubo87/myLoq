@@ -12,7 +12,7 @@ bool is_ancestor(const VD& va, const VD& vb, const graph_t& g); //containment?!
 //graph_t make_subgraph(const graph_t& g, const VD& gv);
 
 //making a tree from a group include only the parent/child relations as all other relations are not in the hwloc tree view. possibly other relationships in the future. however for custom relationships it is not guaranteed to have a tree
-graph_t make_tree(const graph_t& s, const VD& gv);
+graph_t make_can_tree(const graph_t& s, const VD& gv);
 
 
 //goto parent iterator -> only in the parent/child cathegory
