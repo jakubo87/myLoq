@@ -11,6 +11,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/property_map/function_property_map.hpp>
 #include "../include/init_graph.h"
+#include "../include/output_graph.h"
 
 //this is the interface, which simply uses the distance function.
 //it is recommended, to make the distance function not point to a certain graph, but to leave that as a parameter
@@ -293,3 +294,82 @@ void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,co
   }
   std::cout << p << std::endl;
 }
+
+
+
+//possible language for paths: ("PU","child", "L1Cache") 
+
+//PathQueries
+//"find a tuple/structure
+//will work under the assumption, that one is contained by the other for now, MxN relations can be resolved by unifying the containig side into a new entity... later work TODO  
+void find_pattern(const graph_t& g){
+
+  //find 'at least' 2 PUs with common L1 cache -> read: child/parent relation (unless otherwise customised or specified) (possible future work TODO)
+  //'at least is imoprtant to avoid enumerating combinatorics for now
+
+
+  //ALTERNATIVE approach dfs on a filtered graph (only parent) already counting PUs and checking predicate (number of PUs)
+
+//for now all queries will have to be about containment in lack of other relationships
+
+  //list all PUs
+  auto sources = test_get_vds(g, VType("HWLOC_OBJ_PU"));
+
+  //make new graph including paths from PUs to cache
+  graph_t t;
+  //maybe call it subgraph_writer...
+  for (auto vd : sources){
+    anc_iterator a_it(g,vd);
+    while (g[*a_it].type != "HWLOC_OBJ_L1CACHE"){
+      VD curr = *a_it;
+      ++a_it;
+      boost::add_edge(curr,*a_it,t); 
+
+    }
+  }
+  make_dotfile_nolabel(t,"pattern_find_test.dot"); 
+  //check for validity (count PUs)
+  
+  //->bfs_search (while collecting properties -> counting)
+
+
+
+  //replicate for ambiguity: you have 4 cores but only wanted 2? well guess what, you will have all the possibilities (2 over4)i see above... possible solution, copy graphs and delete PUs until the correct amount is contained, recursively?
+
+  //std::vector<graph_t> res; 
+
+
+
+  //find 2 PUs with common L1 cache -> read: child/parent relation (unless otherswise customised or specified)
+  //SPOILER none available on test machine
+
+}
+
+///some mathematical tool from enumerating combinatorics
+//combinations of n different ints
+//constexpr void combinations(std::vector<int> v_in, int n){
+//}
+
+//naive implementation to provide requests like "show me clostest PUs" (close, does not mean, that they are functionally interacting...)
+//"naive" as it does assume symmetry
+//so warning you might get trapped if you assumed the wrong amount, or if you take advantage of PUs, that are there but may be detrimental to performance due to distance, 
+std::vector<std::pair<VD,double>>
+find_closest_to(const graph_t& g,
+                std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
+                VType type, VD start){
+  //get all VDs of specified type
+  auto vds = test_get_vds(g, type);
+  std::vector<std::pair<VD,double>> res(vds.size());
+ // struct less_by_dist{
+ //   bool operator(const auto& a, const auto& b) const { return a.second < b.second };
+ // }
+  
+  std::transform(vds.begin(), vds.end(), res.begin(),[&](const auto& vd)
+    {return  std::make_pair(vd, find_distance(g,start,vd,dist));});           // <---- here!
+
+  std::sort(res.begin(),res.end(),[&](const auto& a, const auto& b) { return a.second < b.second ; } );
+  return res;
+}
+
+//TODO establish a somewhat reasonable default distance function, for the case, that the user doesn't provide one, subject to change: depending on what data from hwloc will be transported over here
+//... and make overloads or each function, where a canonical distance can be of use

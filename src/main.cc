@@ -134,9 +134,17 @@ int main ()
   auto i = make_group("Group1", vs, g);
   std::cout << " Group1 has vd: " << i << std::endl; 
 
+
+
+  //###### PATHS/patterns #########
   //return the group members of group 
   std::cout << "The members of Group1 are the following:" << std::endl;
   //TODO make path queries like "is connected to group", or "is 'child' of cache" 
+
+
+  //find subgraphs
+  find_pattern(g); //TODO
+
 
 
   //DISTANCES
@@ -146,7 +154,7 @@ int main ()
     {
       //the result, if the graph has no direct edge in any allowed category defined by this function
       double res = NOPATH;  //default 
-      auto range = boost::edges(g);
+      auto range = boost::edges(g); //TODO boost::out_edges works, if you "make clean" one in a while...!
       //check all edges for label "child"
        std::for_each (range.first, range.second,[&](const auto & ei){
         if (g[ei].label=="child" && va==source(ei,g) && vb==target(ei,g))
@@ -175,7 +183,21 @@ int main ()
     std::cout << i << ": " ;
     std::cout << find_distance(g,8,i,dist1) << std::endl;
   }
-    
+  
+  //return clostest vertices of specified type sorted by distance
+  auto cl_pus = find_closest_to(g, dist1, "HWLOC_OBJ_PU", 11);
+  std::cout << "closest PUs relative to vd(11) with respect to user defined function dist1:" << std::endl;
+  for (auto a : cl_pus){
+    std::cout << a.first << " " ;
+  }
+  std::cout << std::endl;
+  std::cout << "with distances (respectively):" << std::endl;
+  for (auto a : cl_pus){
+    std::cout << a.second << " " ;
+  }
+  std::cout << std::endl;
+
+
 
   //TODO find partitioning
 

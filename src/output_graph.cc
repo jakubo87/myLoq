@@ -57,7 +57,7 @@ bool is_ancestor(const VD& va, const VD& vb, const graph_t& g){
 graph_t make_can_tree(const graph_t& s , const VD& gv){
 //TODO remove excessive edges and insert vertex and edge properties
   graph_t t; //target graph
-  auto range = boost::adjacent_vertices(gv,s);
+  auto range = boost::adjacent_vertices(gv,s); //lists targets of outgoing edges -> vd of the group's members
   //starting vertex is range.first
   VD root_vd = 1;
   std::for_each(range.first, range.second,

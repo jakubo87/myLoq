@@ -45,7 +45,7 @@ graph_t init_graph(const hwloc_topology_t & t);
 
 std::string obj_type_toString(hwloc_obj_t & obj);
 
-double distance(
+double distance( //<-- ????
     VD vd1,   //source vertex descriptor
     VD vd2,   //source vertex descriptor
     const graph_t& g, //any graph
@@ -66,6 +66,12 @@ double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,
 //for debugging..? prints predecessors...
 void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
 
+void find_pattern(const graph_t& g);
+
+std::vector<std::pair<VD,double>>
+find_closest_to(const graph_t& g,
+                std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
+                VType type, VD start);
 //TODO list:
 //partitioning balanced/evenly or with respect to distances in cores
 
@@ -123,6 +129,7 @@ constexpr auto test_get_vds(const graph_t& g, Args&& ... args){
      });
   return res;
 } 
+
 
 
 #endif
