@@ -345,10 +345,6 @@ void find_pattern(const graph_t& g){
 
 }
 
-///some mathematical tool from enumerating combinatorics
-//combinations of n different ints
-//constexpr void combinations(std::vector<int> v_in, int n){
-//}
 
 //naive implementation to provide requests like "show me clostest PUs" (close, does not mean, that they are functionally interacting...)
 //"naive" as it does assume symmetry
@@ -373,3 +369,38 @@ find_closest_to(const graph_t& g,
 
 //TODO establish a somewhat reasonable default distance function, for the case, that the user doesn't provide one, subject to change: depending on what data from hwloc will be transported over here
 //... and make overloads or each function, where a canonical distance can be of use
+//
+//
+//enumerating combinatorics
+
+std::vector<std::vector<int>>
+comb(const int k, const std::vector<int>& vec){
+  std::vector<std::vector<int>> res{std::vector<int> (k)};
+  res.pop_back(); //clean up but keep the type
+  std::vector<decltype(vec.begin())> viter(k);
+  for(int i=0;i<k; ++i)
+     viter[i]=vec.begin()+i;
+  
+  std::vector<int> temp(k);
+
+  while(viter[0]+k != vec.end()){
+    for(int i=0; i<k; ++i)
+      temp[i]=*(viter[i]);
+    res.push_back(temp);
+    //move iterators / check for reset / if so go deeper and reset all iterators above
+    for(int i=k-1; i>=0;--i){
+      if (viter[i]-i+k != vec.end()){ //<- if trouble go deeper!
+        ++viter[i]; //increase 
+        ++i;
+        for (;i<k;++i){  //resetting all above
+          viter[i]=viter[i-1]+1;
+        }
+        break;
+      }
+    } 
+  }     
+  for(int i=0; i<k; ++i)
+    temp[i]=*(viter[i]);
+  res.push_back(temp);
+  return res;
+}

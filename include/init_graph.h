@@ -68,6 +68,10 @@ void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,co
 
 void find_pattern(const graph_t& g);
 
+///enumerating combinatorics
+std::vector<std::vector<int>>
+comb(const int k, const std::vector<int>& vec);
+
 std::vector<std::pair<VD,double>>
 find_closest_to(const graph_t& g,
                 std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
@@ -129,6 +133,7 @@ constexpr auto test_get_vds(const graph_t& g, Args&& ... args){
      });
   return res;
 } 
+
 
 
 

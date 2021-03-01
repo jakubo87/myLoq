@@ -88,7 +88,11 @@ int main ()
 
   //###################################################################
   //TESTS:
-  
+ 
+  //MATHS
+  std::vector<int> vcomb{1,2,4,5};
+
+
   //BASICS:
   //find vd 
   auto vds = get_vds(
@@ -145,7 +149,15 @@ int main ()
   //find subgraphs
   find_pattern(g); //TODO
 
-
+  //combinatorics (to be integrated into finding bet solution)
+  auto vec = comb(4,std::vector<int> {2,4,6,8,10});
+  std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
+  for(auto co : vec){
+    for(auto el : co)
+      std::cout << el << " ";
+    std::cout << std::endl;
+  }
+  std::cout << vec.size() << " possible combinations." << std::endl;
 
   //DISTANCES
   //calc custom distance
