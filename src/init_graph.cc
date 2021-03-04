@@ -295,6 +295,32 @@ void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,co
   std::cout << p << std::endl;
 }
 
+//boost default bfs visitor
+//template<typename T>
+class bfs_counter : public boost::default_bfs_visitor{
+public:
+    //default ctors
+    template <typename Vertex, typename Graph >
+    void discover_vertex(Vertex u, const Graph& g)
+    {
+      ++num_;
+      std::cout << "heureka i found a new vertex. There are now " << num_ << std::endl;
+      std::cout << "its name is " << u << std::endl;
+    }
+    int num_ = 0;
+};
+
+
+void count_obj(const graph_t& g){
+  bfs_counter bfsc;
+  boost::breadth_first_search(g, 8, boost::visitor(bfsc));
+  std::cout << "finished after " <<  bfsc.num_ << std::endl; // does not work: result is 0
+}
+
+
+
+
+
 
 
 //possible language for paths: ("PU","child", "L1Cache") 
@@ -346,7 +372,7 @@ void find_pattern(const graph_t& g){
 }
 
 
-//naive implementation to provide requests like "show me clostest PUs" (close, does not mean, that they are functionally interacting...)
+//naive implementation to provide requests like "show me clostest PUs" (close as defined by the function...)
 //"naive" as it does assume symmetry
 //so warning you might get trapped if you assumed the wrong amount, or if you take advantage of PUs, that are there but may be detrimental to performance due to distance, 
 std::vector<std::pair<VD,double>>

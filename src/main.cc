@@ -139,6 +139,8 @@ int main ()
   std::cout << " Group1 has vd: " << i << std::endl; 
 
 
+  //VISITORS
+  count_obj(g);
 
   //###### PATHS/patterns #########
   //return the group members of group 

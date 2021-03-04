@@ -76,6 +76,12 @@ std::vector<std::pair<VD,double>>
 find_closest_to(const graph_t& g,
                 std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
                 VType type, VD start);
+
+void count_obj(const graph_t& g);
+
+
+
+
 //TODO list:
 //partitioning balanced/evenly or with respect to distances in cores
 
