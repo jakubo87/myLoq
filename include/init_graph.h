@@ -8,6 +8,7 @@
 #include <functional>
 #include <tuple>
 #include <type_traits>
+#include <boost/graph/breadth_first_search.hpp>
 
 
 using VType = std::string;
@@ -77,10 +78,51 @@ find_closest_to(const graph_t& g,
                 std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
                 VType type, VD start);
 
-void count_obj(const graph_t& g);
 
 
 
+
+template<typename T>
+class bfs_counter : public boost::default_bfs_visitor{
+public:
+    //default ctors
+    template <typename Vertex, typename Graph >
+    void discover_vertex(Vertex u, const Graph& g)
+    {
+      ++num_;
+      std::cout << "heureka i found a new vertex. There are now " << num_ << std::endl;
+      std::cout << "its name is " << u << std::endl;
+    }
+    int num_ = 0;
+};
+
+template<typename T>
+void count_obj(const graph_t& g){
+  bfs_counter<T> bfsc;
+  boost::breadth_first_search(g, 8, boost::visitor(bfsc));
+  std::cout << "finished after " <<  bfsc.num_ << std::endl; // does not work: result is 0
+}
+
+template<typename T>
+class bfs_accumulator : public boost::default_bfs_visitor{
+public:
+    //default ctors
+    template <typename Vertex, typename Graph >
+    void discover_vertex(Vertex u, const Graph& g)
+    {
+      t+=g[u].index;
+      std::cout << "heureka i found a new vertex. Its index is " << g[u].index << std::endl;
+    }
+    T t = 0;
+};
+
+//perhaps allow std library algorithms for users to iterate over graphs...? nice to have
+template< typename T>
+void accumulate (const graph_t& g){
+  bfs_accumulator<Index> bfsa;
+  boost::breadth_first_search(g, 8, boost::visitor(bfsa));
+  std::cout << "finished after " <<  bfsa.t << std::endl; // does not work: result is 0
+}
 
 //TODO list:
 //partitioning balanced/evenly or with respect to distances in cores

@@ -295,28 +295,6 @@ void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,co
   std::cout << p << std::endl;
 }
 
-//boost default bfs visitor
-//template<typename T>
-class bfs_counter : public boost::default_bfs_visitor{
-public:
-    //default ctors
-    template <typename Vertex, typename Graph >
-    void discover_vertex(Vertex u, const Graph& g)
-    {
-      ++num_;
-      std::cout << "heureka i found a new vertex. There are now " << num_ << std::endl;
-      std::cout << "its name is " << u << std::endl;
-    }
-    int num_ = 0;
-};
-
-
-void count_obj(const graph_t& g){
-  bfs_counter bfsc;
-  boost::breadth_first_search(g, 8, boost::visitor(bfsc));
-  std::cout << "finished after " <<  bfsc.num_ << std::endl; // does not work: result is 0
-}
-
 
 
 
@@ -350,12 +328,17 @@ void find_pattern(const graph_t& g){
       VD curr = *a_it;
       ++a_it;
       boost::add_edge(curr,*a_it,t); 
+      boost::add_edge(*a_it,curr,t); 
 
     }
   }
   make_dotfile_nolabel(t,"pattern_find_test.dot"); 
-  //check for validity (count PUs)
+  //check for validity (count PUs in each sub graph from each start)
   
+
+
+
+
   //->bfs_search (while collecting properties -> counting)
 
 
@@ -368,6 +351,12 @@ void find_pattern(const graph_t& g){
 
   //find 2 PUs with common L1 cache -> read: child/parent relation (unless otherswise customised or specified)
   //SPOILER none available on test machine
+
+  // a more mathematical approach
+  // there exist 2 PU a,b  with a!=b, such that their common ancestor c (Parent(a)^n1 & P(b)^n2) is L2 cache or lower (n3's Parent(c).type == "L2_CACHE" 
+
+
+
 
 }
 
@@ -396,9 +385,8 @@ find_closest_to(const graph_t& g,
 //TODO establish a somewhat reasonable default distance function, for the case, that the user doesn't provide one, subject to change: depending on what data from hwloc will be transported over here
 //... and make overloads or each function, where a canonical distance can be of use
 //
-//
-//enumerating combinatorics
 
+//enumerating combinatorics
 std::vector<std::vector<int>>
 comb(const int k, const std::vector<int>& vec){
   std::vector<std::vector<int>> res{std::vector<int> (k)};

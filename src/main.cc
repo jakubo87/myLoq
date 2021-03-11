@@ -69,6 +69,19 @@
 
 
 
+/*Vertices:
+ * VType type aka std::string
+ * Index index aka unsigned long int
+ * 
+ *Edges:
+ * EType label aka std::string
+ * double weight=0
+ *
+ *
+ *TODO init additional properties by user
+ *
+ *
+ */
 int main ()
 {
   //hwloc_init
@@ -84,14 +97,26 @@ int main ()
   //cleaning up:
   hwloc_topology_destroy(t); //since data was copied hwloc is not needed anymore
   
-
-
+  //##################################################################
+  //SETUP
+  //TODO extensible properties or adding properties the boost way... 
+  //struct Edge {
+  //  EType label;
+  //  double weight=0; //TODO remove? 
+  //};
   //###################################################################
   //TESTS:
  
   //MATHS
-  std::vector<int> vcomb{1,2,4,5};
-
+  //combinatorics (to be integrated into finding best solution)
+  auto vec = comb(4,std::vector<int> {2,4,6,8,10});
+  std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
+  for(auto co : vec){
+    for(auto el : co)
+      std::cout << el << " ";
+    std::cout << std::endl;
+  }
+  std::cout << vec.size() << " possible combinations." << std::endl;
 
   //BASICS:
   //find vd 
@@ -99,8 +124,14 @@ int main ()
       g,                //the graph
       "HWLOC_OBJ_CORE", //the type
       0);               //the index
-
   std::cout << "vd of core 0: " << vds[0] << std::endl;
+
+  //get/set - also demonstrate, that weights are not being used for distance calculation. 
+  const auto e1 = get_ed(g,2,1,"child").front();
+  std::cout << "setting the weight of child edge between vertices 2 and 1. Original value: " << boost::get(&Edge::weight, g, e1) << std::endl;
+  boost::put(&Edge::weight, g, e1, 1000);
+  std::cout << "new value is: " << boost::get(&Edge::weight, g, e1) << std::endl;
+
 
   //generic vd query TODO does this also work when queries are generated at runtime...???
   vds = test_get_vds(g, VType("HWLOC_OBJ_CORE"));
@@ -139,8 +170,10 @@ int main ()
   std::cout << " Group1 has vd: " << i << std::endl; 
 
 
-  //VISITORS
-  count_obj(g);
+  //VISITORS TODO
+  count_obj<Index>(g);
+  accumulate<Index>(g);
+  //accumulate(g);
 
   //###### PATHS/patterns #########
   //return the group members of group 
@@ -151,15 +184,9 @@ int main ()
   //find subgraphs
   find_pattern(g); //TODO
 
-  //combinatorics (to be integrated into finding bet solution)
-  auto vec = comb(4,std::vector<int> {2,4,6,8,10});
-  std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
-  for(auto co : vec){
-    for(auto el : co)
-      std::cout << el << " ";
-    std::cout << std::endl;
-  }
-  std::cout << vec.size() << " possible combinations." << std::endl;
+  ///NOTE!!!! in order to calculate properties simply make a subgraph and use std::accumlate... for instance...
+
+
 
   //DISTANCES
   //calc custom distance
@@ -231,4 +258,4 @@ int main ()
 
   return 0;
 }
-
+//TODO make tests generic
