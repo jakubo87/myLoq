@@ -182,7 +182,36 @@ constexpr auto test_get_vds(const graph_t& g, Args&& ... args){
   return res;
 } 
 
+//setter
+template<typename T>
+inline void put(T* type, graph_t& g, VD vd, T value){
+  boost::put(type, g, vd, value);
+}
 
+template<typename T>
+inline void put(T* type, graph_t& g, ED ed, T value){
+  boost::put(type, g, ed, value);
+}
 
+//getter
+template<typename T>
+inline decltype(auto) get(T* type, graph_t& g, VD vd){
+  return boost::get(type, g, vd);
+}
+
+template<typename T>
+inline decltype(auto) get(T* type, graph_t& g, ED ed){
+  return boost::get(type, g, ed);
+}
+//const types
+template<typename T>
+inline decltype(auto) get(T* type, const graph_t& g, VD vd){
+  return boost::get(type, g, vd);
+}
+
+template<typename T>
+inline decltype(auto) get(T* type, const graph_t& g, ED ed){
+  return boost::get(type, g, ed);
+}
 
 #endif

@@ -128,9 +128,9 @@ int main ()
 
   //get/set - also demonstrate, that weights are not being used for distance calculation. 
   const auto e1 = get_ed(g,2,1,"child").front();
-  std::cout << "setting the weight of child edge between vertices 2 and 1. Original value: " << boost::get(&Edge::weight, g, e1) << std::endl;
-  boost::put(&Edge::weight, g, e1, 1000);
-  std::cout << "new value is: " << boost::get(&Edge::weight, g, e1) << std::endl;
+  std::cout << "setting the weight of child edge between vertices 2 and 1. Original value: " << get(&Edge::weight, g, e1) << std::endl;
+  put(&Edge::weight, g, e1, 1000);
+  std::cout << "new value is: " << get(&Edge::weight, g, e1) << std::endl;
 
 
   //generic vd query TODO does this also work when queries are generated at runtime...???
