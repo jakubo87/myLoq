@@ -84,6 +84,7 @@
  */
 int main ()
 {
+  //#######################   INITIALISATION   ################################################
   //hwloc_init
   hwloc_topology_t t;
   hwloc_topology_init(&t);  // initialization
@@ -96,14 +97,34 @@ int main ()
 //TODO expand graph!
   //cleaning up:
   hwloc_topology_destroy(t); //since data was copied hwloc is not needed anymore
-  
-  //##################################################################
-  //SETUP
+ 
   //TODO extensible properties or adding properties the boost way... 
   //struct Edge {
   //  EType label;
   //  double weight=0; //TODO remove? 
   //};
+  //######################      UPDATING SETUP           #####################################
+
+  //add new relationship: replicatea
+  //find last level cache TODO (for all CUs)
+  auto l2 = get_vds(g, VType("HWLOC_OBJ_L2CACHE"));
+  auto mem = get_vds(g, VType("HWLOC_OBJ_NUMANODE"));
+  for (auto vl : l2){
+    for (auto vm : mem){
+     //this commented line was the former hoped sulotion. however it turned out, that the edges would not appear in the graph. Only like done underneath. This may be some quirk or some larger underlying problem like can be the invalidation of indizes/descriptors and iterators when modifying the graph
+     //ED e = add_edge(vl,vm, g); //<-- this alone doesn't work!? TODO
+      auto p = boost::add_edge(vl,vm, g);
+      auto e = p.first;
+      bool ed = p.second;
+      put(&Edge::label,g,e, "replicates");
+      std::cout << "HEY!!!!! add edge from " << vl << " to "<< vm << "?" << std::endl; // ed <<  std::endl;
+    }
+  }
+
+
+
+
+
   //###################################################################
   //TESTS:
  
@@ -122,8 +143,8 @@ int main ()
   //find vd 
   auto vds = get_vds(
       g,                //the graph
-      "HWLOC_OBJ_CORE", //the type
-      0);               //the index
+      VType("HWLOC_OBJ_CORE"), //the type
+      Index(0));               //the index
   std::cout << "vd of core 0: " << vds[0] << std::endl;
 
   
@@ -135,36 +156,22 @@ int main ()
   put(&Edge::weight, g, e1, 1000);
   std::cout << "new value is: " << get(&Edge::weight, g, e1) << std::endl;
 
-  //add new relationship: replicatea
-  //find last level cache TODO (for all CUs)
-  auto l2 = test_get_vds(g, VType("HWLOC_OBJ_L2CACHE"));
-  auto mem = test_get_vds(g, VType("HWLOC_OBJ_NUMANODE"));
-  for (auto vl : l2){
-    for (auto vm : mem){
-     //ED e = add_edge(vl,vm, g); //<-- this alone doesn't work!? TODO
-      auto p = boost::add_edge(vl,vm, g);
-      auto e = p.first;
-      bool ed = p.second;
-      put(&Edge::label,g,e, "replicates");
-      std::cout << "HEY!!!!! add edge from " << vl << " to "<< vm << "?" << std::endl; // ed <<  std::endl;
-    }
-  }
 
 
   //generic vd query TODO does this also work when queries are generated at runtime...???
-  vds = test_get_vds(g, VType("HWLOC_OBJ_CORE"));
+  vds = get_vds(g, VType("HWLOC_OBJ_CORE"));
   std::cout << "testing generic querying for vds... CORES have vd: " << std::endl;
   for (auto& v : vds)
     std::cout << v << " ";
   std::cout << std::endl;
   std::cout << "VDs with rubbish type: " << std::endl;
-  vds = test_get_vds(g, VType("xxx"));
+  vds = get_vds(g, VType("xxx"));
   for (auto& v : vds)
     std::cout << v << " ";
   std::cout << std::endl;
-  //  vds = test_get_vds(g, 1); <- does not compile you have to write the explicit type
+  //  vds = get_vds(g, 1); <- does not compile you have to write the explicit type
   std::cout << "searching for VD with type: CORE and index: 1 (testing matching in reverse order): " << std::endl;
-  vds = test_get_vds(g, Index(1), VType("HWLOC_OBJ_CORE"));
+  vds = get_vds(g, Index(1), VType("HWLOC_OBJ_CORE"));
   for (auto& v : vds)
     std::cout << v << " ";
   std::cout << std::endl;

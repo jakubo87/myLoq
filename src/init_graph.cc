@@ -24,17 +24,17 @@ double distance(
 }
 
 
-//may need some sort of wildcard that always returns true when compared to predicates
-std::vector<VD> get_vds(const graph_t& g, const std::string& t, Index i){
-  std::vector<VD> res;  //<- necessary to always have something to return even if nothing matches
-  auto range = boost::vertices(g);
-    std::for_each(range.first, range.second, [&](const auto & vd)
-      {
-        if(g[vd].type==t && g[vd].index==i)
-          res.push_back(vd);
-      });
-  return res;
-} 
+////may need some sort of wildcard that always returns true when compared to predicates
+//std::vector<VD> get_vds(const graph_t& g, const std::string& t, Index i){
+//  std::vector<VD> res;  //<- necessary to always have something to return even if nothing matches
+//  auto range = boost::vertices(g);
+//    std::for_each(range.first, range.second, [&](const auto & vd)
+//      {
+//        if(g[vd].type==t && g[vd].index==i)
+//          res.push_back(vd);
+//      });
+//  return res;
+//} 
 
 std::vector<VD> get_vds_by_type(const graph_t& g, const std::string& t){
   std::vector<VD> res;
@@ -326,7 +326,7 @@ void find_pattern(const graph_t& g){
 //for now all queries will have to be about containment in lack of other relationships
 
   //list all PUs
-  auto sources = test_get_vds(temp, VType("HWLOC_OBJ_PU"));
+  auto sources = get_vds(temp, VType("HWLOC_OBJ_PU"));
   auto gv = make_group("temp", sources, temp);
 
   //make new graph including paths from PUs to cache
@@ -368,7 +368,7 @@ find_closest_to(const graph_t& g,
                 std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
                 VType type, VD start){
   //get all VDs of specified type
-  auto vds = test_get_vds(g, type);
+  auto vds = get_vds(g, type);
   std::vector<std::pair<VD,double>> res(vds.size());
  // struct less_by_dist{
  //   bool operator(const auto& a, const auto& b) const { return a.second < b.second };

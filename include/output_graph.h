@@ -44,6 +44,14 @@ class anc_iterator{
 
 //###### Implementation
 
+//
+//graph_t& filter_graph(){
+//
+//  return boost::filtered_graph;
+//}
+
+
+
 template<typename... Args >
 graph_t isolate_cathegories(const graph_t& s, Args&&... args){
   graph_t g(s); //TODO filter graph

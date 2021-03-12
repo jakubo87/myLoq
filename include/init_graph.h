@@ -15,6 +15,7 @@ using VType = std::string;
 using Index = unsigned int;
 using Mem   = unsigned long int;
 using SIMD  = unsigned int;
+//using RAND  = std::string;
 
 using EType = std::string;
 
@@ -153,7 +154,7 @@ constexpr bool check_props(T && t) {
 //Recursive case
 template <typename T, typename P, typename... Args>
 constexpr bool check_props(T&& t, P&& p, Args... args) {
-  if (std::get<typename std::remove_reference<P>::type>(t)!=p) return false;
+  if (std::get<typename std::remove_reference<P>::type>(t)!=p) return false; //somehow trying to squeeze out the value in order to compare it
   return check_props(t, args...);
 }
 
@@ -169,6 +170,22 @@ constexpr auto get_vds(const graph_t& g, Args&& ... args){
      });
   return res;
 } 
+
+
+//more general graph querying properties
+//same as above, only not only for vertices but also edges in the form of query(T*, args) meaning a property and one ore more constraints (like larger than x, smaller than y...  and then when the next T* is found the process is repeated for the next predicates until the query ends also get will be utilised instead of makeing tuples
+
+
+//next step: query these properties for each vertex/edge on a pattern search
+
+
+
+
+
+
+
+
+
 
 //setter
 template<typename T>
