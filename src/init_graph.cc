@@ -69,6 +69,19 @@ const EType& get_edge_label(const graph_t& g, const ED& ed){
   return g[ed].label;
 }
 
+VD make_group(const std::string& name, const std::vector<VD>& cont, graph_t& g){
+  //insert group vertex into graph
+  auto v = boost::add_vertex(g);
+  put(&Vertex::type, g, v, name);
+  for (auto & vd : cont){ //for all vertex descriptors
+    //add a connection to the group members
+    auto e = boost::add_edge(v,vd,g).first;
+    put(&Edge::label, g, e, "member");
+  }
+  std::cout << "Group: " << name << " has been created" << std::endl;
+  //.. containing vertices ...
+  return v;
+}
 
 
 //name may be a bit misleading TODO: translation of hwloc_obj->type to string
@@ -225,10 +238,10 @@ graph_t init_graph(const hwloc_topology_t & t){
  // auto grp = get_vds(g,"HWLOC_OBJ_CORE");
  // auto mem = get_vds(g,"HWLOC_OBJ_NUMANODE");
 
-  for (const auto& i : mem)
-    grp.push_back(i);
-  make_group("Group0", grp, g);
-
+//  for (const auto& i : mem)
+//    grp.push_back(i);
+//  make_group("Group0", grp, g);
+//
   return g;
 }
 
@@ -268,7 +281,7 @@ double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,
 
 //Dijkstra TODO return value
 //prints predeccessors from target to source (potentially for debugging..?)
-void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
+std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
   std::vector<VD> directions(num_vertices(g));
 
   //###helper function to get the input right
@@ -286,20 +299,16 @@ void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,co
       .predecessor_map(boost::make_iterator_property_map(
                       directions.begin(), get(boost::vertex_index, g))));
 
+  std::vector<VD> res;
   VD p = vb; //target 
   while (p != va) //finish
   {
-    std::cout << p << ' ';
+    res.push_back(p);
     p = directions[p];
   }
-  std::cout << p << std::endl;
+  res.push_back(p);
+  return res;
 }
-
-
-
-
-
-
 
 //possible language for paths: ("PU","child", "L1Cache") 
 
@@ -307,7 +316,7 @@ void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,co
 //"find a tuple/structure
 //will work under the assumption, that one is contained by the other for now, MxN relations can be resolved by unifying the containig side into a new entity... later work TODO  
 void find_pattern(const graph_t& g){
-
+  graph_t temp =g;
   //find 'at least' 2 PUs with common L1 cache -> read: child/parent relation (unless otherwise customised or specified) (possible future work TODO)
   //'at least is imoprtant to avoid enumerating combinatorics for now
 
@@ -317,21 +326,11 @@ void find_pattern(const graph_t& g){
 //for now all queries will have to be about containment in lack of other relationships
 
   //list all PUs
-  auto sources = test_get_vds(g, VType("HWLOC_OBJ_PU"));
+  auto sources = test_get_vds(temp, VType("HWLOC_OBJ_PU"));
+  auto gv = make_group("temp", sources, temp);
 
   //make new graph including paths from PUs to cache
-  graph_t t;
-  //maybe call it subgraph_writer...
-  for (auto vd : sources){
-    anc_iterator a_it(g,vd);
-    while (g[*a_it].type != "HWLOC_OBJ_L1CACHE"){
-      VD curr = *a_it;
-      ++a_it;
-      boost::add_edge(curr,*a_it,t); 
-      boost::add_edge(*a_it,curr,t); 
-
-    }
-  }
+  graph_t t = make_can_tree(temp ,gv , "HWLOC_OBJ_L1CACHE");
   make_dotfile_nolabel(t,"pattern_find_test.dot"); 
   //check for validity (count PUs in each sub graph from each start)
   

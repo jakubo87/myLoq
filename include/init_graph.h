@@ -12,20 +12,25 @@
 
 
 using VType = std::string;
-using EType = std::string;
 using Index = unsigned int;
+using Mem   = unsigned long int;
+using SIMD  = unsigned int;
+
+using EType = std::string;
 
 const double NOPATH = 10000;
 
 //not accessible via std::get<type>
 struct Vertex {
-  VType type; 
-  Index index;
+  VType      type; 
+  Index      index;
+  Mem        mem_cap;
+  SIMD       simd;
 };
 
 struct Edge {
   EType label;
-  double weight=0; //TODO remove? 
+  double weight=0;
 };
 
 
@@ -62,10 +67,14 @@ std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType&);
 
 const EType& get_edge_label(const graph_t& g, const ED& ed);
 
+//returns the vertex descriptor to the group vertex
+VD make_group(const std::string& name, const std::vector<VD>& cont, graph_t& g);
+
+
 //returns the shortest distance when no direct edge is available, accumulating distances
 double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
 //for debugging..? prints predecessors...
-void shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
+std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
 
 void find_pattern(const graph_t& g);
 
@@ -133,27 +142,6 @@ void accumulate (const graph_t& g){
 
 //IMPLEMENTATION
 
-//C is a container from which to get the group's elements' vertex descriptors
-//returns the vertex descriptor to the group
-template<class C>
-auto make_group(const std::string & name, const C & cont, graph_t & g){
-  //insert group vertex into graph
-  auto v = boost::add_vertex(
-      {name, //vertex type
-      0},     //id - all Groups have id 0 the user needs to choose a unique name
-      g);
-  for (auto & vd : cont){ //for all vertex descriptors
-    //add a connection to the group members
-    boost::add_edge(
-      v,
-      vd,
-      {"member", 0.0},
-      g);
-  }
-  std::cout << "Group: " << name << " has been created" << std::endl;
-  //.. containing vertices ...
-  return v;
-}
 
 //########QUERYING 
 //check a tuple for its properties (type based)
@@ -213,5 +201,24 @@ template<typename T>
 inline decltype(auto) get(T* type, const graph_t& g, ED ed){
   return boost::get(type, g, ed);
 }
+
+//add vertex/edge, yes: adding an object with the property at once is discouraged, but still possible via boost::add_xxxx(...)
+inline decltype(auto) add_vertex(graph_t g) {
+  return boost::add_vertex(g);
+}
+
+inline decltype(auto) add_edge(VD va, VD vb, graph_t g) {
+  return boost::add_edge(va, vb, g).first; //in the current graph setup parallel edges are allowed, so .second is never false
+}
+
+inline void remove_edge(ED ed, graph_t g){
+  boost::remove_edge(ed, g); //this invalidates all ede iterators
+}
+
+inline void remove_vertex(VD vd, graph_t g){
+  boost::clear_vertex(vd,g);    //removes all edges connected to the vertex
+  boost::remove_vertex(vd,g);   //removes the vertex and invalidates all vertex descriptors larger than vd (and of coursee again all edge descriptors
+}
+
 
 #endif

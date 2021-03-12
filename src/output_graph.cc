@@ -52,23 +52,27 @@ bool is_ancestor(const VD& va, const VD& vb, const graph_t& g){
   return res;
 }
 
-
-//make canonical tree from root to all the elements in group by adding all the vertices along the shortest path with distance, that involves parent/child relationships (the dummy distance for now)
-graph_t make_can_tree(const graph_t& s , const VD& gv){
-//TODO remove excessive edges and insert vertex and edge properties
+//TODO subgraph-writer
+//make canonical tree from  all the elements in group to root by adding all the parent/child edges & vertices on the way
+graph_t make_can_tree(const graph_t& s, const VD& gv, const VType& type){
+//TODO insert vertex and edge properties
   graph_t t; //target graph
   auto range = boost::adjacent_vertices(gv,s); //lists targets of outgoing edges -> vd of the group's members
   //starting vertex is range.first
-  VD root_vd = 1;
   std::for_each(range.first, range.second,
       [&](const auto& vd)
       {
         anc_iterator a_it(s,vd);
-        while ( *a_it != root_vd){ //==1
+        while (get(&Vertex::type, s, *a_it) != type){  
           VD curr =*a_it;
           ++a_it; 
-          boost::add_edge(curr, *a_it, {"child", 0.0}, t);
-          boost::add_edge(*a_it, curr, {"parent", 0.0}, t);
+          if (get_ed(t,curr, *a_it, "child").empty()){ 
+            auto c = boost::add_edge(curr, *a_it, t).first; // keep it default constructible... TODO deep copy edge/vertex
+            auto p = boost::add_edge(*a_it, curr, t).first;
+            put(&Edge::label,t, c, "child");                //...and replenish stuff later... 
+            put(&Edge::label,t, p, "parent");
+          }
+          else break;
         }
       }
       );
@@ -76,6 +80,9 @@ graph_t make_can_tree(const graph_t& s , const VD& gv){
   return t;
 }
 
+graph_t make_can_tree(const graph_t& s , const VD& gv){
+  return make_can_tree(s ,gv, "HWLOC_OBJ_MACHINE");
+}
 
 
 

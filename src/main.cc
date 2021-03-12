@@ -126,11 +126,29 @@ int main ()
       0);               //the index
   std::cout << "vd of core 0: " << vds[0] << std::endl;
 
-  //get/set - also demonstrate, that weights are not being used for distance calculation. 
+  
+
+
+  //get/set
   const auto e1 = get_ed(g,2,1,"child").front();
   std::cout << "setting the weight of child edge between vertices 2 and 1. Original value: " << get(&Edge::weight, g, e1) << std::endl;
   put(&Edge::weight, g, e1, 1000);
   std::cout << "new value is: " << get(&Edge::weight, g, e1) << std::endl;
+
+  //add new relationship: replicatea
+  //find last level cache TODO (for all CUs)
+  auto l2 = test_get_vds(g, VType("HWLOC_OBJ_L2CACHE"));
+  auto mem = test_get_vds(g, VType("HWLOC_OBJ_NUMANODE"));
+  for (auto vl : l2){
+    for (auto vm : mem){
+     //ED e = add_edge(vl,vm, g); //<-- this alone doesn't work!?
+      auto p = boost::add_edge(vl,vm, g);
+      auto e = p.first;
+      bool ed = p.second;
+      put(&Edge::label,g,e, "replicates");
+      std::cout << "HEY!!!!! add edge from " << vl << " to "<< vm << "?" << std::endl; // ed <<  std::endl;
+    }
+  }
 
 
   //generic vd query TODO does this also work when queries are generated at runtime...???
@@ -145,7 +163,7 @@ int main ()
     std::cout << v << " ";
   std::cout << std::endl;
   //  vds = test_get_vds(g, 1); <- does not compile you have to write the explicit type
-  std::cout << "searching for VD with type: CORE and index: 1 (testing maching in reverse order to what it is in the vertex struct): " << std::endl;
+  std::cout << "searching for VD with type: CORE and index: 1 (testing matching in reverse order): " << std::endl;
   vds = test_get_vds(g, Index(1), VType("HWLOC_OBJ_CORE"));
   for (auto& v : vds)
     std::cout << v << " ";
@@ -216,7 +234,10 @@ int main ()
 
   std::cout << "distance (8,9): " << distance(8,9,g, dist1) << std::endl;
   std::cout << "path from 9 to 8:" << std::endl; 
-  shortest_path(g, 8, 9, dist1); 
+  auto r1 = shortest_path(g, 8, 9, dist1); 
+  for (auto vd : r1)
+    std::cout << vd << " ";
+  std::cout << std::endl;
 
   //this returns the shortest distance found over multiple hops - or a direct edge - with respect to only a given distance function
   std::cout << "combined distances from 8 to:" << std::endl;
