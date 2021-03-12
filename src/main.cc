@@ -141,7 +141,7 @@ int main ()
   auto mem = test_get_vds(g, VType("HWLOC_OBJ_NUMANODE"));
   for (auto vl : l2){
     for (auto vm : mem){
-     //ED e = add_edge(vl,vm, g); //<-- this alone doesn't work!?
+     //ED e = add_edge(vl,vm, g); //<-- this alone doesn't work!? TODO
       auto p = boost::add_edge(vl,vm, g);
       auto e = p.first;
       bool ed = p.second;
@@ -213,10 +213,10 @@ int main ()
     {
       //the result, if the graph has no direct edge in any allowed category defined by this function
       double res = NOPATH;  //default 
-      auto range = boost::edges(g); //TODO boost::out_edges works, if you "make clean" one in a while...!
+      auto range = boost::out_edges(va, g); //TODO boost::out_edges works, if you "make clean" one in a while...!
       //check all edges for label "child"
        std::for_each (range.first, range.second,[&](const auto & ei){
-        if (g[ei].label=="child" && va==source(ei,g) && vb==target(ei,g))
+        if (g[ei].label=="child" && vb==target(ei,g))
           res = 10.0;       //case of rising in the hierarchy
       });
       //check all edges for label "parent"

@@ -59,7 +59,7 @@ double distance( //<-- ????
 
 
 //the querying interfaces will need a unified version. possibly with strongly typed parameters
-std::vector<VD> get_vds(const graph_t& g, const VType& t, Index i);
+//std::vector<VD> get_vds(const graph_t& g, const VType& t, Index i); deprecated
 
 std::vector<VD> get_vds_by_type(const graph_t& g, const VType& t);
 
@@ -159,7 +159,7 @@ constexpr bool check_props(T&& t, P&& p, Args... args) {
 
 //query the vd from properties
 template<typename... Args>
-constexpr auto test_get_vds(const graph_t& g, Args&& ... args){
+constexpr auto get_vds(const graph_t& g, Args&& ... args){
   std::vector<VD> res;
   auto range = boost::vertices(g);
   std::for_each(range.first, range.second, [&](const auto & vd)
