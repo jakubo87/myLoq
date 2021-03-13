@@ -9,15 +9,24 @@
 #include <tuple>
 #include <type_traits>
 #include <boost/graph/breadth_first_search.hpp>
-
+#include <vector>
+#include <boost/config.hpp>
+#include <boost/array.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/property_map/property_map.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/property_map/function_property_map.hpp>
 
 using VType = std::string;
 using Index = unsigned int;
 using Mem   = unsigned long int;
 using SIMD  = unsigned int;
-//using RAND  = std::string;
+using RAND  = std::string;
 
 using EType = std::string;
+
+
+
 
 const double NOPATH = 10000;
 
@@ -52,11 +61,14 @@ graph_t init_graph(const hwloc_topology_t & t);
 
 std::string obj_type_toString(hwloc_obj_t & obj);
 
-double distance( //<-- ????
-    VD vd1,   //source vertex descriptor
-    VD vd2,   //source vertex descriptor
-    const graph_t& g, //any graph
-    std::function<double(VD,VD,const graph_t&)> func);
+template<typename G>
+using Distance = std::function<double(VD,VD,const G&)>;
+
+//double distance( //<-- ????
+//    VD vd1,   //source vertex descriptor
+//    VD vd2,   //source vertex descriptor
+//    const graph_t& g, //any graph
+//    std::function<double(VD,VD,const graph_t&)> func);
 
 
 //the querying interfaces will need a unified version. possibly with strongly typed parameters
@@ -72,10 +84,41 @@ const EType& get_edge_label(const graph_t& g, const ED& ed);
 VD make_group(const std::string& name, const std::vector<VD>& cont, graph_t& g);
 
 
-//returns the shortest distance when no direct edge is available, accumulating distances
-double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
+//Dijkstras shortest distances algorithm
+//returns the shortest distances. When no direct edge is available, accumulating distances
+template<typename G> //next step: make the output container a template 
+std::vector<double>
+dijkstra_spaths(const G& g, VD va, Distance<G> func){
+  using ED = typename boost::graph_traits<G>::edge_descriptor;
+  using VD = typename boost::graph_traits<G>::vertex_descriptor;
+
+  std::vector<VD> p(num_vertices(g));
+  std::vector<double> d(num_vertices(g));
+
+  //###helper function to get the input right
+  std::function<double(ED)> f = [&](const ED& ed)
+    {
+      auto va = boost::source(ed, g);
+      auto vb = boost::target(ed, g); 
+      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
+    };
+
+  boost::dijkstra_shortest_paths(
+      g,  //graph
+      va, //source
+      boost::weight_map(boost::function_property_map<decltype(f),ED,double>(f))
+      //comment: do NOT(!!) use the make_function_propertymap() function. it fails to deduce correctly!
+      .predecessor_map(boost::make_iterator_property_map(
+                            p.begin(), get(boost::vertex_index, g)))
+      .distance_map(boost::make_iterator_property_map(
+                            d.begin(),get(boost::vertex_index, g)))
+  );
+  return d;
+}
+
 //for debugging..? prints predecessors...
 std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
+
 
 void find_pattern(const graph_t& g);
 
@@ -188,51 +231,41 @@ constexpr auto get_vds(const graph_t& g, Args&& ... args){
 
 
 //setter
-template<typename T>
-inline void put(T* type, graph_t& g, VD vd, T value){
-  boost::put(type, g, vd, value);
-}
-
-template<typename T>
-inline void put(T* type, graph_t& g, ED ed, T value){
-  boost::put(type, g, ed, value);
+template<typename T, typename G, typename EV>
+inline void put(T type, G& g, EV ev, T value){
+  boost::put(type, g, ev, value);
 }
 
 //getter
-template<typename T>
-inline decltype(auto) get(T* type, graph_t& g, VD vd){
-  return boost::get(type, g, vd);
+template<typename T, typename G, typename EV>
+inline decltype(auto) get(T type, G& g, EV ev){
+  return boost::get(type, g, ev);
 }
 
-template<typename T>
-inline decltype(auto) get(T* type, graph_t& g, ED ed){
-  return boost::get(type, g, ed);
-}
-//const types
-template<typename T>
-inline decltype(auto) get(T* type, const graph_t& g, VD vd){
-  return boost::get(type, g, vd);
-}
-
-template<typename T>
-inline decltype(auto) get(T* type, const graph_t& g, ED ed){
-  return boost::get(type, g, ed);
+//const type
+template<typename T, typename G, typename EV>
+inline decltype(auto) get(T type, const G& g, EV ev){
+  return boost::get(type, g, ev);
 }
 
 //add vertex/edge, yes: adding an object with the property at once is discouraged, but still possible via boost::add_xxxx(...)
-inline decltype(auto) add_vertex(graph_t g) {
+template<typename G>
+inline decltype(auto) add_vertex(G& g) {
   return boost::add_vertex(g);
 }
 
-inline decltype(auto) add_edge(VD va, VD vb, graph_t g) {
+template<typename G>
+inline decltype(auto) add_edge(VD va, VD vb, G& g) {
   return boost::add_edge(va, vb, g).first; //in the current graph setup parallel edges are allowed, so .second is never false
 }
 
-inline void remove_edge(ED ed, graph_t g){
+template<typename G>
+inline void remove_edge(ED ed, G& g){
   boost::remove_edge(ed, g); //this invalidates all ede iterators
 }
 
-inline void remove_vertex(VD vd, graph_t g){
+template<typename G, typename V>
+inline void remove_vertex(V vd, G& g){
   boost::clear_vertex(vd,g);    //removes all edges connected to the vertex
   boost::remove_vertex(vd,g);   //removes the vertex and invalidates all vertex descriptors larger than vd (and of coursee again all edge descriptors
 }

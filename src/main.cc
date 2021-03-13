@@ -7,6 +7,7 @@
 #include <functional>
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
+#include <boost/graph/copy.hpp>
 
 ///*
 //indentation of higher depth opjects
@@ -123,11 +124,27 @@ int main ()
 
 
 
-
-
   //###################################################################
   //TESTS:
- 
+  //std::function<bool(Index)> fun =  [&](auto res){return res==0;};
+  //filtered graph: right now as a n iterator-feat (see boost documentation to filtered_graph)
+  auto fgv = filtered_graph(g, &Vertex::index);//, [&](auto res){return res==0;}); //}fun) ; //this should make a filtered graph with only the vertices whose index is 0
+  //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
+
+  //make deep copy of filtered graph
+  //auto rangev = boost::vertices(fgv); //fgv cause view...
+  //auto rangee = boost::edges(fgv);
+  //graph_t fgdeep(rangee.first, rangee.second, rangee.first-rangee.second);
+  //make_dotfile(fgv, "filtered_graph.dot");
+  //graph_t ng;
+  //add_vertex(ng);
+  //boost::copy_graph(fgv,ng);
+  //std::for_each(rangee.first, rangee.second,[&](auto ed){ boost::add_edge(ng).first);
+  //make_dotfile_nolabel(fgv, "filtered_graph.dot");
+
+
+
+
   //MATHS
   //combinatorics (to be integrated into finding best solution)
   auto vec = comb(4,std::vector<int> {2,4,6,8,10});
@@ -147,6 +164,7 @@ int main ()
       Index(0));               //the index
   std::cout << "vd of core 0: " << vds[0] << std::endl;
 
+  //testing for something not included in the
   
 
 
@@ -236,23 +254,14 @@ int main ()
     };
 
 
-  std::cout << "distance (5,7): " << distance(5,7,g, dist1) << std::endl;
-  std::cout << "distance (6,7): " << distance(6,7,g, dist1) << std::endl;
-
-  std::cout << "distance (8,9): " << distance(8,9,g, dist1) << std::endl;
+  std::cout << "distance (5,7): " << dist1(5,7,g) << std::endl;
+  std::cout << "distance (8,9): " << dist1(8,9,g) << std::endl;
   std::cout << "path from 9 to 8:" << std::endl; 
   auto r1 = shortest_path(g, 8, 9, dist1); 
   for (auto vd : r1)
     std::cout << vd << " ";
   std::cout << std::endl;
 
-  //this returns the shortest distance found over multiple hops - or a direct edge - with respect to only a given distance function
-  std::cout << "combined distances from 8 to:" << std::endl;
-  for(long unsigned int i=0; i < boost::num_vertices(g); ++i){
-    std::cout << i << ": " ;
-    std::cout << find_distance(g,8,i,dist1) << std::endl;
-  }
-  
   //return clostest vertices of specified type sorted by distance
   auto cl_pus = find_closest_to(g, dist1, "HWLOC_OBJ_PU", 11);
   std::cout << "closest PUs relative to vd(11) with respect to user defined function dist1:" << std::endl;
@@ -266,6 +275,16 @@ int main ()
   }
   std::cout << std::endl;
 
+  //dijstra
+  auto r2 = dijkstra_spaths(g, 5, dist1);
+  for(VD vd = 0; vd<r2.size(); ++vd)
+    std::cout << "from vd 5 to "<< vd << ", shortest distance: " << r2[vd] << std::endl; 
+
+
+  //dijstrap on a filtered graph
+  //auto r3 = dijkstra_spaths(fgv, 5, dist1);
+  //for(VD vd = 0; vd<r3.size(); ++vd)
+  //  std::cout << "from vd 5 to "<< vd << ", shortest distance: " << r3[vd] << std::endl; 
 
 
   //TODO find partitioning

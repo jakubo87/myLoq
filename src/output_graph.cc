@@ -3,35 +3,10 @@
 #include <iostream>
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
-#include <boost/graph/graphviz.hpp>
 
 
-//####### Printing the graph
-class label_writer {
-public:
 
-  void operator()(std::ostream& out, const VD& v) const {
-    out << "[label=\"" << g[v].type << " #" << g[v].index << "\"]";
-  }
 
-  void operator()(std::ostream& out, const ED& e) const {
-    out << "[label=\"" << g[e].label << "\"]";
-  }
-  const graph_t& g;
-};
-
-void make_dotfile(const graph_t & g, const std::string& dotf){
-  std::ofstream dot(dotf);
-  label_writer lw{g};   //constructor declaring what graph to use, to use the label_writer as a functor
-  boost::write_graphviz(dot, g, lw, lw);
-  std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
-}
-
-void make_dotfile_nolabel(const graph_t & g, const std::string& dotf){
-  std::ofstream dot(dotf);
-  boost::write_graphviz(dot, g);
-  std::cout << "Graph has been written to dotfile: " << dotf << std::endl;
-}
 
 
 //is va a descendent of vb?

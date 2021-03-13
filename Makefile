@@ -4,14 +4,14 @@ LDFLAGS = -flto
 LIBS = -lm -lhwloc -lboost_graph
 SRC = ./src/
 #BUILD = ./build/
-INCLUDE = ./include/
+#INCLUDE = ./include/
 OBJS = init_graph.o output_graph.o main.o
-HEADER = init_graph.h output_graph.h
+HEADER = ./include/init_graph.h ./include/output_graph.h
 
 
 
-all: ${OBJS}
-	${CC} ${CFLAGS} ${LDFLAGS} ${LIBS} ${OBJS} ${INCLUDE}output_graph.h ${INCLUDE}init_graph.h -o hwloc-test
+all: ${OBJS} ${HEADER}
+	${CC} ${CFLAGS} ${LDFLAGS} ${LIBS} ${OBJS} ${HEADER} -o hwloc-test
 
 main.o: ${SRC}main.cc
 	${CC} ${CFLAGS} -c $<

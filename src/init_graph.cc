@@ -1,27 +1,16 @@
-#include <iostream>
-#include <string>
-#include <hwloc.h>
-#include <vector>
-#include <functional>
-#include <boost/config.hpp>
-#include <boost/array.hpp>
-#include <boost/graph/graph_traits.hpp>
-#include <boost/property_map/property_map.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/property_map/function_property_map.hpp>
+
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
 
 //this is the interface, which simply uses the distance function.
 //it is recommended, to make the distance function not point to a certain graph, but to leave that as a parameter
-double distance( 
-              VD vd1,
-              VD vd2,
-              const graph_t& g,  // g is not THE graph, it is any graph included -> shadowing
-              std::function<double(VD,VD,const graph_t&)> func){
-  return func(vd1, vd2, g);
-}
+//double distance( 
+//              VD vd1,
+//              VD vd2,
+//              const graph_t& g,  // g is not THE graph, it is any graph included -> shadowing
+//              std::function<double(VD,VD,const graph_t&)> func){
+//  return func(vd1, vd2, g);
+//}
 
 
 ////may need some sort of wildcard that always returns true when compared to predicates
@@ -245,39 +234,6 @@ graph_t init_graph(const hwloc_topology_t & t){
   return g;
 }
 
-//Dijkstra
-//returns deduced/accumulated distances
-//i.e.: if there is no direct connection in a category, hops and penalties of known edges are accumulated along the path. The function is thereby recursive and needs to add a large penalty value if 2 vertices have no direct edge. This is still different from general reachability, which will eventually result from such calculation 
-//
-//function property needs to heavily penalise edge categories, that are not supposed to be used -> via function, i.e.in the hands of the user. however reachability would not be absolute, only difficult (as in 1e31)
-double find_distance(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
-  std::vector<VD> p(num_vertices(g));
-  std::vector<double> d(num_vertices(g));
-
-  //###helper function to get the input right
-  std::function<double(ED)> f = [&](const ED& ed)
-    {
-      auto va = boost::source(ed, g);
-      auto vb = boost::target(ed, g); 
-      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
-    };
-
-  boost::dijkstra_shortest_paths(
-      g,  //graph
-      va, //source
-      boost::weight_map(boost::function_property_map<decltype(f),ED,double>(f))
-      //comment: do NOT(!!) use the make_function_propertymap() function. it fails to deduce correctly!
-      .predecessor_map(boost::make_iterator_property_map(
-                            p.begin(), get(boost::vertex_index, g)))
-      .distance_map(boost::make_iterator_property_map(
-                            d.begin(),get(boost::vertex_index, g)))
-  );
- 
-  return d[vb];
-}
-
-
-
 
 //Dijkstra TODO return value
 //prints predeccessors from target to source (potentially for debugging..?)
@@ -375,7 +331,7 @@ find_closest_to(const graph_t& g,
  // }
   
   std::transform(vds.begin(), vds.end(), res.begin(),[&](const auto& vd)
-    {return  std::make_pair(vd, find_distance(g,start,vd,dist));});           // <---- here!
+    {return  std::make_pair(vd, dijkstra_spaths(g,start,dist)[vd]);});           // <---- here!
 
   std::sort(res.begin(),res.end(),[&](const auto& a, const auto& b) { return a.second < b.second ; } );
   return res;
