@@ -1,15 +1,9 @@
-#include <iostream>
-#include <hwloc.h>
-#include <vector>
-#include <iostream>
-#include <string>
-#include <utility>
-#include <functional>
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
-#include <boost/graph/copy.hpp>
 
-///*
+#include "../include/hwloc-test.h"
+
+//*
 //indentation of higher depth opjects
 //*/
 //std::ostream & operator<<(std::ostream & os,std::pair<std::string,int> p){

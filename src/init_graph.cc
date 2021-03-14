@@ -1,6 +1,6 @@
 
 #include "../include/init_graph.h"
-#include "../include/output_graph.h"
+#include "../include/hwloc-test.h"
 
 //this is the interface, which simply uses the distance function.
 //it is recommended, to make the distance function not point to a certain graph, but to leave that as a parameter
@@ -11,32 +11,6 @@
 //              std::function<double(VD,VD,const graph_t&)> func){
 //  return func(vd1, vd2, g);
 //}
-
-
-////may need some sort of wildcard that always returns true when compared to predicates
-//std::vector<VD> get_vds(const graph_t& g, const std::string& t, Index i){
-//  std::vector<VD> res;  //<- necessary to always have something to return even if nothing matches
-//  auto range = boost::vertices(g);
-//    std::for_each(range.first, range.second, [&](const auto & vd)
-//      {
-//        if(g[vd].type==t && g[vd].index==i)
-//          res.push_back(vd);
-//      });
-//  return res;
-//} 
-
-std::vector<VD> get_vds_by_type(const graph_t& g, const std::string& t){
-  std::vector<VD> res;
-  auto range = boost::vertices(g);
-    std::for_each(range.first, range.second, [&](const auto& vd)
-      {
-        if(g[vd].type==t)
-          res.push_back(vd);
-      }
-    );
-  return res;
-} 
-
 
 //query the ed for the edge from va to vb with label (std::string)
 std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType& label){
@@ -219,18 +193,6 @@ graph_t init_graph(const hwloc_topology_t & t){
     //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
     //what is the multiset selector in edge list good for then..? 
   }
-
-  //make default group with all memory and all cores
-  auto grp = get_vds_by_type(g,"HWLOC_OBJ_CORE");
-  auto mem = get_vds_by_type(g,"HWLOC_OBJ_NUMANODE");
-
- // auto grp = get_vds(g,"HWLOC_OBJ_CORE");
- // auto mem = get_vds(g,"HWLOC_OBJ_NUMANODE");
-
-//  for (const auto& i : mem)
-//    grp.push_back(i);
-//  make_group("Group0", grp, g);
-//
   return g;
 }
 
@@ -268,52 +230,6 @@ std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<doub
 
 //possible language for paths: ("PU","child", "L1Cache") 
 
-//PathQueries
-//"find a tuple/structure
-//will work under the assumption, that one is contained by the other for now, MxN relations can be resolved by unifying the containig side into a new entity... later work TODO  
-void find_pattern(const graph_t& g){
-  graph_t temp =g;
-  //find 'at least' 2 PUs with common L1 cache -> read: child/parent relation (unless otherwise customised or specified) (possible future work TODO)
-  //'at least is imoprtant to avoid enumerating combinatorics for now
-
-
-  //ALTERNATIVE approach dfs on a filtered graph (only parent) already counting PUs and checking predicate (number of PUs)
-
-//for now all queries will have to be about containment in lack of other relationships
-
-  //list all PUs
-  auto sources = get_vds(temp, VType("HWLOC_OBJ_PU"));
-  auto gv = make_group("temp", sources, temp);
-
-  //make new graph including paths from PUs to cache
-  graph_t t = make_can_tree(temp ,gv , "HWLOC_OBJ_L1CACHE");
-  make_dotfile_nolabel(t,"pattern_find_test.dot"); 
-  //check for validity (count PUs in each sub graph from each start)
-  
-
-
-
-
-  //->bfs_search (while collecting properties -> counting)
-
-
-
-  //replicate for ambiguity: you have 4 cores but only wanted 2? well guess what, you will have all the possibilities (2 over4)i see above... possible solution, copy graphs and delete PUs until the correct amount is contained, recursively?
-
-  //std::vector<graph_t> res; 
-
-
-
-  //find 2 PUs with common L1 cache -> read: child/parent relation (unless otherswise customised or specified)
-  //SPOILER none available on test machine
-
-  // a more mathematical approach
-  // there exist 2 PU a,b  with a!=b, such that their common ancestor c (Parent(a)^n1 & P(b)^n2) is L2 cache or lower (n3's Parent(c).type == "L2_CACHE" 
-
-
-
-
-}
 
 
 //naive implementation to provide requests like "show me clostest PUs" (close as defined by the function...)

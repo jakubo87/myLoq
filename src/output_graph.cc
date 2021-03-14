@@ -1,12 +1,6 @@
-#include <string>
-#include <fstream>
-#include <iostream>
-#include "../include/init_graph.h"
+
 #include "../include/output_graph.h"
-
-
-
-
+#include "../include/hwloc-test.h"
 
 
 //is va a descendent of vb?
@@ -61,6 +55,34 @@ graph_t make_can_tree(const graph_t& s , const VD& gv){
 
 
 
+//PathQueries
+//"find a tuple/structure
+//will work under the assumption, that one is contained by the other for now, MxN relations can be resolved by unifying the containig side into a new entity... later work TODO  
+void find_pattern(const graph_t& g){
+  graph_t temp =g;
+  //find 'at least' 2 PUs with common L1 cache -> read: child/parent relation (unless otherwise customised or specified) (possible future work TODO)
+  //'at least is imoprtant to avoid enumerating combinatorics for now
+  //ALTERNATIVE approach dfs on a filtered graph (only parent) already counting PUs and checking predicate (number of PUs)
+//for now all queries will have to be about containment in lack of other relationships
+  //list all PUs
+  auto sources = get_vds(temp, VType("HWLOC_OBJ_PU"));
+  auto gv = make_group("temp", sources, temp);
+
+  //make new graph including paths from PUs to cache
+  graph_t t = make_can_tree(temp ,gv , "HWLOC_OBJ_L1CACHE");
+  make_dotfile_nolabel(t,"pattern_find_test.dot"); 
+  //check for validity (count PUs in each sub graph from each start)
+  
+
+  //->bfs_search (while collecting properties -> counting)
+  //replicate for ambiguity: you have 4 cores but only wanted 2? well guess what, you will have all the possibilities (2 over4)i see above... possible solution, copy graphs and delete PUs until the correct amount is contained, recursively?
+  //std::vector<graph_t> res; 
+  //find 2 PUs with common L1 cache -> read: child/parent relation (unless otherswise customised or specified)
+  //SPOILER none available on test machine
+  // a more mathematical approach
+  // there exist 2 PU a,b  with a!=b, such that their common ancestor c (Parent(a)^n1 & P(b)^n2) is L2 cache or lower (n3's Parent(c).type == "L2_CACHE" 
+
+}
 
 
 

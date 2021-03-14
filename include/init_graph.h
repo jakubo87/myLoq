@@ -1,21 +1,7 @@
 #ifndef INIT_GRAPH_H
 #define INIT_GRAPH_H
 
-#include <iostream>
-#include <hwloc.h>
-#include <boost/graph/adjacency_list.hpp>
-#include <string>
-#include <functional>
-#include <tuple>
-#include <type_traits>
-#include <boost/graph/breadth_first_search.hpp>
-#include <vector>
-#include <boost/config.hpp>
-#include <boost/array.hpp>
-#include <boost/graph/graph_traits.hpp>
-#include <boost/property_map/property_map.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/property_map/function_property_map.hpp>
+#include "../include/hwloc-test.h"
 
 using VType = std::string;
 using Index = unsigned int;
@@ -64,17 +50,9 @@ std::string obj_type_toString(hwloc_obj_t & obj);
 template<typename G>
 using Distance = std::function<double(VD,VD,const G&)>;
 
-//double distance( //<-- ????
-//    VD vd1,   //source vertex descriptor
-//    VD vd2,   //source vertex descriptor
-//    const graph_t& g, //any graph
-//    std::function<double(VD,VD,const graph_t&)> func);
-
 
 //the querying interfaces will need a unified version. possibly with strongly typed parameters
 //std::vector<VD> get_vds(const graph_t& g, const VType& t, Index i); deprecated
-
-std::vector<VD> get_vds_by_type(const graph_t& g, const VType& t);
 
 std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType&);
 
@@ -120,7 +98,6 @@ dijkstra_spaths(const G& g, VD va, Distance<G> func){
 std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func);
 
 
-void find_pattern(const graph_t& g);
 
 ///enumerating combinatorics
 std::vector<std::vector<int>>
@@ -229,7 +206,7 @@ constexpr auto get_vds(const graph_t& g, Args&& ... args){
 
 
 
-
+// maybe use namespace boost instead....
 //setter
 template<typename T, typename G, typename EV>
 inline void put(T type, G& g, EV ev, T value){
