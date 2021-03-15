@@ -75,33 +75,34 @@ class anc_iterator{
 template <typename Map> //will SFINAE make it right? if we use a type, that is only existent in Edge or Vertex
 struct constrained_map {
   using res_t = typename boost::property_traits<Map>::value_type;
-  using EV    = typename boost::property_traits<Map>::key_type;
   constrained_map(){ }
   constrained_map(Map prop) : m_prop(prop) { }
-  bool operator()(const EV ev) const {
-    return fun_(get(m_prop, ev));
+  template<typename EV>
+  bool operator()(const EV& ev) const {
+    return 0 < boost::get(m_prop, ev);
   }
-  //can i potentionally get away with making graph structures instead of ED or VD a constraint???? NO says the documentation...! but maybe... if reduced...to a representative vertex... like a starting point...
   Map m_prop;
-  std::function<bool(res_t)> fun_= [&](auto res){return res==0;};
+  //std::function<bool(res_t)> fun_= [&](auto res){return res!=0;};
 };
 
 //NOTE: maybe just use the graph without & -> by copy, to preserve it and not accidentally write in it...
-template<typename P> //NOTE can we just use this for querying literally anything...?
+template<typename P, typename G> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
-filtered_graph(graph_t& g, P p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+filtered_graph(G& g, P p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
     //std::function fun
   using map_t = decltype(boost::get(p,g));
-  constrained_map<map_t> filter(boost::get(p,g)); //cannot deduce, because class...
-  return boost::filtered_graph<graph_t, decltype(filter)>(g, filter);
+  constrained_map<map_t> filter(boost::get(p,g));
+  return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
 }
 
-
-
-
-
-
-
+template<typename G> //NOTE can we just use this for querying literally anything...?
+decltype(auto)
+filtered_graph(G& g){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+    //std::function fun
+  using map_t = decltype(boost::get(&Edge::weight,g));
+  constrained_map<map_t> filter(boost::get(&Edge::weight,g));
+  return boost::filtered_graph<G, constrained_map<map_t>> (g, filter);
+}
 
 
 

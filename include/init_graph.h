@@ -198,7 +198,7 @@ constexpr auto get_vds(const graph_t& g, Args&& ... args){
 
 //next step: query these properties for each vertex/edge on a pattern search
 
-
+//filtered graph to query stuff
 
 
 

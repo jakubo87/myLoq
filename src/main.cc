@@ -117,29 +117,38 @@ int main ()
   }
 
 
-
   //###################################################################
   //TESTS:
+
+//  struct index_odd{
+//    bool operator(Index i)(
+//
+//
+// };
+  //###############################   FILTER GRAPH   ################################################
   //std::function<bool(Index)> fun =  [&](auto res){return res==0;};
   //filtered graph: right now as a n iterator-feat (see boost documentation to filtered_graph)
-  auto fgv = filtered_graph(g, &Vertex::index);//, [&](auto res){return res==0;}); //}fun) ; //this should make a filtered graph with only the vertices whose index is 0
+  auto  fgv = filtered_graph(g); //, &Vertex::index);//, [&](auto res){return res==0;}); //}fun) ; //this should make a filtered graph with only the vertices whose index is 0
   //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
+  // display all remaining vertices
+  std::cout << "show only vertices with index != 0" << std::endl; 
+  auto fil_r = boost::vertices(fgv);
+  std::for_each(fil_r.first, fil_r.second, [&](auto v){ std::cout << boost::get(&Vertex::index, g, v) << " ";}); // thsi apparently does NOT get filtered!!!
+  std::cout << std::endl;
+  boost::print_graph(g);   //works
+  boost::print_graph(fgv); //does not work
+  make_dotfile(fgv, "filterd graph.dot");
+  
+  ///////only with boost intrusive...
+  //boost::filtered_graph<graph_t, boost::keep_all std::function<bool(boost::vertex_t)>> fgso(
+  //  g, boost::keep_all{},
+  //    [&](boost::vertex_t vd) {
+  //      return 0<get(&Vertex::index,g);
+  //    });
+  //boost::print_graph(fgso);
 
-  //make deep copy of filtered graph
-  //auto rangev = boost::vertices(fgv); //fgv cause view...
-  //auto rangee = boost::edges(fgv);
-  //graph_t fgdeep(rangee.first, rangee.second, rangee.first-rangee.second);
-  //make_dotfile(fgv, "filtered_graph.dot");
-  //graph_t ng;
-  //add_vertex(ng);
-  //boost::copy_graph(fgv,ng);
-  //std::for_each(rangee.first, rangee.second,[&](auto ed){ boost::add_edge(ng).first);
-  //make_dotfile_nolabel(fgv, "filtered_graph.dot");
 
-
-
-
-  //MATHS
+  //##################################    MATHS     #################################################
   //combinatorics (to be integrated into finding best solution)
   auto vec = comb(4,std::vector<int> {2,4,6,8,10});
   std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
@@ -150,7 +159,7 @@ int main ()
   }
   std::cout << vec.size() << " possible combinations." << std::endl;
 
-  //BASICS:
+  //################################     BASICS     ##################################################
   //find vd 
   auto vds = get_vds(
       g,                //the graph
@@ -162,7 +171,7 @@ int main ()
   
 
 
-  //get/set
+  //###############################      GET/SET     #################################################
   const auto e1 = get_ed(g,2,1,"child").front();
   std::cout << "setting the weight of child edge between vertices 2 and 1. Original value: " << get(&Edge::weight, g, e1) << std::endl;
   put(&Edge::weight, g, e1, 1000);
@@ -294,8 +303,14 @@ int main ()
   make_dotfile(g,"total.dot");
 
   //isolate a subgraph and reduce to hwloc relationships
-  auto g2 = make_can_tree(g,14);
-  make_dotfile_nolabel(g2,"hwloc.dot");
+  auto ctree2 = make_can_tree(g,14);
+  make_dotfile_nolabel(ctree2,"hwloc.dot");
+
+
+  //copy tests with copy graph
+  //graph_t cfg(); //deep copy of filtered graph (is this even possible...?, what about the vertex indices...?
+  //boost::copy_graph(g, cfg);
+  //make_dotfile_nolabel(cfg, "copied_nolabel.dot");
 
   return 0;
 }
