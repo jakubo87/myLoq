@@ -8,6 +8,7 @@ using Index = unsigned int;
 using Mem   = unsigned long int;
 using SIMD  = unsigned int;
 using RAND  = std::string;
+using Glob  = unsigned long int; //eventually tags... for identifying vertices across temporary graphs
 
 using EType = std::string;
 
@@ -22,6 +23,7 @@ struct Vertex {
   Index      index;
   Mem        mem_cap;
   SIMD       simd;
+  Glob       gindex;
 };
 
 struct Edge {
@@ -112,52 +114,60 @@ find_closest_to(const graph_t& g,
 
 
 
-template<typename T>
 class bfs_counter : public boost::default_bfs_visitor{
 public:
     //default ctors
+    bfs_counter(unsigned int& num ): num_(num){}
+
     template <typename Vertex, typename Graph >
-    void discover_vertex(Vertex u, const Graph& g)
+    void initialize_vertex(Vertex u, const Graph& g) //what about filtered vertice..?
     {
-      ++num_;
-      std::cout << "heureka i found a new vertex. There are now " << num_ << std::endl;
-      std::cout << "its name is " << u << std::endl;
+      num_++;
     }
-    int num_ = 0;
+    unsigned int& num_;
 };
 
-template<typename T>
-void count_obj(const graph_t& g){
-  bfs_counter<T> bfsc;
-  boost::breadth_first_search(g, 8, boost::visitor(bfsc));
-  std::cout << "finished after " <<  bfsc.num_ << std::endl; // does not work: result is 0
+template<typename G, typename V>
+int count_obj(const G& g, V vd){
+  unsigned int count=0;
+  bfs_counter bfsc{count};
+  boost::breadth_first_search(g, vd, boost::visitor(bfsc));
+  std::cout << "counted " <<  count << std::endl;
+  return count;
 }
 
 template<typename T>
 class bfs_accumulator : public boost::default_bfs_visitor{
 public:
     //default ctors
-    template <typename Vertex, typename Graph >
-    void discover_vertex(Vertex u, const Graph& g)
+    bfs_accumulator(T& sum, T Vertex::* mptr) : sum_(sum), mptr_(mptr) {} 
+
+    template <typename Vertex, typename G >
+    void discover_vertex(Vertex u, const G& g)
     {
-      t+=g[u].index;
-      std::cout << "heureka i found a new vertex. Its index is " << g[u].index << std::endl;
+      sum_+=boost::get(mptr_,g, u);   //g[u].index;
     }
-    T t = 0;
+    T& sum_;
+    T Vertex::* mptr_;
 };
 
+
 //perhaps allow std library algorithms for users to iterate over graphs...? nice to have
-template< typename T>
-void accumulate (const graph_t& g){
-  bfs_accumulator<Index> bfsa;
-  boost::breadth_first_search(g, 8, boost::visitor(bfsa));
-  std::cout << "finished after " <<  bfsa.t << std::endl; // does not work: result is 0
+template< typename G, typename T,typename V>
+T accumulate (const G& g,T Vertex::* mptr , V st_vd){
+  T value=0;
+  bfs_accumulator<T> bfsa(value, mptr);
+  boost::breadth_first_search(g, st_vd, boost::visitor(bfsa));
+  std::cout << "accumulated: " << value << std::endl; 
+  return value;
 }
 
 //TODO list:
 //partitioning balanced/evenly or with respect to distances in cores
-
-
+//Idea
+//1. make mst in separate temp graph
+//2. remove last k-1 edges
+//3. rattle k-means style until balance is satisfied or break after x iterations
 
 
 
