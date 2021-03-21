@@ -126,27 +126,24 @@ int main ()
 //
 // };
   //###############################   FILTER GRAPH   ################################################
-  //std::function<bool(Index)> fun =  [&](auto res){return res==0;};
-  //filtered graph: right now as a n iterator-feat (see boost documentation to filtered_graph)
-  auto  fgv = filtered_graph(g); //, &Vertex::index);//, [&](auto res){return res==0;}); //}fun) ; //this should make a filtered graph with only the vertices whose index is 0
+
+  //VPred<Index,graph_t> twoorless{&g,&Vertex::index,2};
+
+ // auto vfil = filtered_graph(g, &Vertex::index);
+ // boost::print_graph(vfil);
+
+
+  auto  fge = filtered_graph(g, &Edge::weight); 
   //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
   // display all remaining vertices
   std::cout << "show only vertices with index != 0" << std::endl; 
-  auto fil_r = boost::vertices(fgv);
-  std::for_each(fil_r.first, fil_r.second, [&](auto v){ std::cout << boost::get(&Vertex::index, g, v) << " ";}); // thsi apparently does NOT get filtered!!!
+  auto fil_r = boost::edges(fge);
+  std::for_each(fil_r.first, fil_r.second, [&](auto e){ std::cout << boost::get(&Edge::label, g, e) << " ";});
   std::cout << std::endl;
-  boost::print_graph(g);   //works
-  boost::print_graph(fgv); //does not work
-  make_dotfile(fgv, "filterd graph.dot");
+  boost::print_graph(g); 
+  boost::print_graph(fge);
+  make_dotfile(fge, "filtered_edge_graph.dot");
   
-  ///////only with boost intrusive...
-  //boost::filtered_graph<graph_t, boost::keep_all std::function<bool(boost::vertex_t)>> fgso(
-  //  g, boost::keep_all{},
-  //    [&](boost::vertex_t vd) {
-  //      return 0<get(&Vertex::index,g);
-  //    });
-  //boost::print_graph(fgso);
-
 
   //##################################    MATHS     #################################################
   //combinatorics (to be integrated into finding best solution)
@@ -158,6 +155,7 @@ int main ()
     std::cout << std::endl;
   }
   std::cout << vec.size() << " possible combinations." << std::endl;
+
 
   //################################     BASICS     ##################################################
   //find vd 

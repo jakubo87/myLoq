@@ -86,22 +86,22 @@ struct constrained_map {
 };
 
 //NOTE: maybe just use the graph without & -> by copy, to preserve it and not accidentally write in it...
-template<typename P, typename G> //NOTE can we just use this for querying literally anything...?
+template<typename P, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
-filtered_graph(G& g, P p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+filtered_graph(G& g, P EV::* p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
     //std::function fun
   using map_t = decltype(boost::get(p,g));
   constrained_map<map_t> filter(boost::get(p,g));
   return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
 }
 
-template<typename G> //NOTE can we just use this for querying literally anything...?
+template<typename P, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
-filtered_graph(G& g){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+filtered_graph(const G& g, P EV::* p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
     //std::function fun
-  using map_t = decltype(boost::get(&Edge::weight,g));
-  constrained_map<map_t> filter(boost::get(&Edge::weight,g));
-  return boost::filtered_graph<G, constrained_map<map_t>> (g, filter);
+  using map_t = decltype(boost::get(p,g));
+  constrained_map<map_t> filter(boost::get(p,g));
+  return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
 }
 
 
@@ -111,9 +111,6 @@ graph_t isolate_cathegories(const graph_t& s, Args&&... args){
   graph_t g(s); //TODO filter graph
 return g;
 }
-
-
-
 //#### check if given ED has any of the cathegories/labels
 //template<> //empty case
 constexpr

@@ -40,7 +40,7 @@ using graph_t = boost::adjacency_list<
                      Edge>;                  //edge property (see bundled properties)
 // the following settings seem to contradict some internal details of the adjacency list when using out_edges (hypothesis)
                      //boost::no_property,    //graph property 
-                     //boost::multisetS>;     //edge container selector... again? 
+                     //boost::multisetS>;     //edge container selector... probably the right onw.. but might need major changes concerning VD
 
 using VD = graph_t::vertex_descriptor;
 using ED = graph_t::edge_descriptor;
@@ -210,7 +210,20 @@ constexpr auto get_vds(const graph_t& g, Args&& ... args){
 
 //filtered graph to query stuff
 
-
+template<typename T, typename G>
+struct VPred {
+  using Edge = typename boost::graph_traits<G>::edge_descriptor;
+  using Vertex = typename boost::graph_traits<G>::vertex_descriptor;
+  //ctor
+  VPred(const G* g, const T Vertex::* mptr, const T& value): g_(g), mptr_(mptr), value_(value) {}
+  bool operator()(const Edge) const {return true;}
+  bool operator()(const Vertex v) const {
+    return boost::get(mptr_,*g_, v)< value_;
+  }
+  const G* g_;
+  const T Vertex::* mptr_;
+  const T value_;
+};
 
 
 
