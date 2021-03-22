@@ -133,175 +133,175 @@ int main ()
  // boost::print_graph(vfil);
 
 
-  auto  fge = filtered_graph(g, &Edge::weight); 
-  //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
-  // display all remaining vertices
-  std::cout << "show only vertices with index != 0" << std::endl; 
-  auto fil_r = boost::edges(fge);
-  std::for_each(fil_r.first, fil_r.second, [&](auto e){ std::cout << boost::get(&Edge::label, g, e) << " ";});
-  std::cout << std::endl;
-  boost::print_graph(g); 
-  boost::print_graph(fge);
-  make_dotfile(fge, "filtered_edge_graph.dot");
-  
-
-  //##################################    MATHS     #################################################
-  //combinatorics (to be integrated into finding best solution)
-  auto vec = comb(4,std::vector<int> {2,4,6,8,10});
-  std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
-  for(auto co : vec){
-    for(auto el : co)
-      std::cout << el << " ";
-    std::cout << std::endl;
-  }
-  std::cout << vec.size() << " possible combinations." << std::endl;
-
-
-  //################################     BASICS     ##################################################
-  //find vd 
-  auto vds = get_vds(
-      g,                //the graph
-      VType("HWLOC_OBJ_CORE"), //the type
-      Index(0));               //the index
-  std::cout << "vd of core 0: " << vds[0] << std::endl;
-
-  //testing for something not included in the
-  
-
-
-  //###############################      GET/SET     #################################################
-  const auto e1 = get_ed(g,2,1,"child").front();
-  std::cout << "setting the weight of child edge between vertices 2 and 1. Original value: " << get(&Edge::weight, g, e1) << std::endl;
-  put(&Edge::weight, g, e1, 1000);
-  std::cout << "new value is: " << get(&Edge::weight, g, e1) << std::endl;
-
-
-
-  //generic vd query TODO does this also work when queries are generated at runtime...???
-  vds = get_vds(g, VType("HWLOC_OBJ_CORE"));
-  std::cout << "testing generic querying for vds... CORES have vd: " << std::endl;
-  for (auto& v : vds)
-    std::cout << v << " ";
-  std::cout << std::endl;
-  std::cout << "VDs with rubbish type: " << std::endl;
-  vds = get_vds(g, VType("xxx"));
-  for (auto& v : vds)
-    std::cout << v << " ";
-  std::cout << std::endl;
-  //  vds = get_vds(g, 1); <- does not compile you have to write the explicit type
-  std::cout << "searching for VD with type: CORE and index: 1 (testing matching in reverse order): " << std::endl;
-  vds = get_vds(g, Index(1), VType("HWLOC_OBJ_CORE"));
-  for (auto& v : vds)
-    std::cout << v << " ";
-  std::cout << std::endl;
-
-
-  
-  //find edge properties
-  std::cout << "ed label from vd 1 to 2: " << get_edge_label(g, get_ed(g,1,2,"parent").at(0)) << std::endl;
-  //find edges by their property
-  std::cout << "List all edges with the parent property:" << std::endl;
-  auto eds = get_eds(g, "parent");
-  for (const auto& ed : eds){
-    std::cout << boost::source(ed,g) << " to " << boost::target(ed,g) << std::endl;
-  }
-
-
-  //GROUPS
-  //make group - at first arbitrary
-  std::vector<VD> vs = {10,12};
-  auto i = make_group("Group1", vs, g);
-  std::cout << " Group1 has vd: " << i << std::endl; 
-
-
-  //#################################VISITORS TODO###########################################
-  count_obj(g,1);
-  accumulate(g,&Vertex::index, 1);
-
-  //###### PATHS/patterns #########
-  //return the group members of group 
-  std::cout << "The members of Group1 are the following:" << std::endl;
-  //TODO make path queries like "is connected to group", or "is 'child' of cache" 
-
-
-  //find subgraphs
-  find_pattern(g); //TODO
-
-  ///NOTE!!!! in order to calculate properties simply make a subgraph and use std::accumlate... for instance...
-
-
-
-  //DISTANCES
-  //calc custom distance
-  //define a distance function:
-  std::function<double(VD,VD,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
-    {
-      //the result, if the graph has no direct edge in any allowed category defined by this function
-      double res = NOPATH;  //default 
-      auto range = boost::out_edges(va, g); //TODO boost::out_edges works, if you "make clean" one in a while...!
-      //check all edges for label "child"
-       std::for_each (range.first, range.second,[&](const auto & ei){
-        if (g[ei].label=="child" && vb==target(ei,g))
-          res = 10.0;       //case of rising in the hierarchy
-      });
-      //check all edges for label "parent"
-      std::for_each (range.first, range.second,[&](const auto & ei){
-        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
-          res = 0.0;        //case when descending in hierarchy
-      });
-
-      return res;
-    };
-
-
-  std::cout << "distance (5,7): " << dist1(5,7,g) << std::endl;
-  std::cout << "distance (8,9): " << dist1(8,9,g) << std::endl;
-  std::cout << "path from 9 to 8:" << std::endl; 
-  auto r1 = shortest_path(g, 8, 9, dist1); 
-  for (auto vd : r1)
-    std::cout << vd << " ";
-  std::cout << std::endl;
-
-  //return clostest vertices of specified type sorted by distance
-  auto cl_pus = find_closest_to(g, dist1, "HWLOC_OBJ_PU", 11);
-  std::cout << "closest PUs relative to vd(11) with respect to user defined function dist1:" << std::endl;
-  for (auto a : cl_pus){
-    std::cout << a.first << " " ;
-  }
-  std::cout << std::endl;
-  std::cout << "with distances (respectively):" << std::endl;
-  for (auto a : cl_pus){
-    std::cout << a.second << " " ;
-  }
-  std::cout << std::endl;
-
-  //dijstra
-  auto r2 = dijkstra_spaths(g, 5, dist1);
-  for(VD vd = 0; vd<r2.size(); ++vd)
-    std::cout << "from vd 5 to "<< vd << ", shortest distance: " << r2[vd] << std::endl; 
-
-
-  //dijstrap on a filtered graph
-  //auto r3 = dijkstra_spaths(fgv, 5, dist1);
-  //for(VD vd = 0; vd<r3.size(); ++vd)
-  //  std::cout << "from vd 5 to "<< vd << ", shortest distance: " << r3[vd] << std::endl; 
-
-
-  //TODO find partitioning
-
-  //ancestry iterator
-  std::cout << "is 3 an ancestor of 11?: " << is_ancestor(11,3,g) << std::endl;
-  std::cout << "is 11 an ancestor of 3?: " << is_ancestor(3,11,g) << std::endl;
-
-
-
-  //TODO return subgraph
-  make_dotfile_nolabel(g,"totalnl.dot");
-  make_dotfile(g,"total.dot");
-
-  //isolate a subgraph and reduce to hwloc relationships
-  auto ctree2 = make_can_tree(g,14);
-  make_dotfile_nolabel(ctree2,"hwloc.dot");
+//  auto  fge = filtered_graph(g, &Edge::weight); 
+//  //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
+//  // display all remaining vertices
+//  std::cout << "show only vertices with index != 0" << std::endl; 
+//  auto fil_r = boost::edges(fge);
+//  std::for_each(fil_r.first, fil_r.second, [&](auto e){ std::cout << boost::get(&Edge::label, g, e) << " ";});
+//  std::cout << std::endl;
+//  boost::print_graph(g); 
+//  boost::print_graph(fge);
+//  make_dotfile(fge, "filtered_edge_graph.dot");
+//  
+//
+//  //##################################    MATHS     #################################################
+//  //combinatorics (to be integrated into finding best solution)
+//  auto vec = comb(4,std::vector<int> {2,4,6,8,10});
+//  std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
+//  for(auto co : vec){
+//    for(auto el : co)
+//      std::cout << el << " ";
+//    std::cout << std::endl;
+//  }
+//  std::cout << vec.size() << " possible combinations." << std::endl;
+//
+//
+//  //################################     BASICS     ##################################################
+//  //find vd 
+//  auto vds = get_vds(
+//      g,                //the graph
+//      VType("HWLOC_OBJ_CORE"), //the type
+//      Index(0));               //the index
+//  std::cout << "vd of core 0: " << vds[0] << std::endl;
+//
+//  //testing for something not included in the
+//  
+//
+//
+//  //###############################      GET/SET     #################################################
+//  const auto e1 = get_ed(g,2,1,"child").front();
+//  std::cout << "setting the weight of child edge between vertices 2 and 1. Original value: " << get(&Edge::weight, g, e1) << std::endl;
+//  put(&Edge::weight, g, e1, 1000);
+//  std::cout << "new value is: " << get(&Edge::weight, g, e1) << std::endl;
+//
+//
+//
+//  //generic vd query TODO does this also work when queries are generated at runtime...???
+//  vds = get_vds(g, VType("HWLOC_OBJ_CORE"));
+//  std::cout << "testing generic querying for vds... CORES have vd: " << std::endl;
+//  for (auto& v : vds)
+//    std::cout << v << " ";
+//  std::cout << std::endl;
+//  std::cout << "VDs with rubbish type: " << std::endl;
+//  vds = get_vds(g, VType("xxx"));
+//  for (auto& v : vds)
+//    std::cout << v << " ";
+//  std::cout << std::endl;
+//  //  vds = get_vds(g, 1); <- does not compile you have to write the explicit type
+//  std::cout << "searching for VD with type: CORE and index: 1 (testing matching in reverse order): " << std::endl;
+//  vds = get_vds(g, Index(1), VType("HWLOC_OBJ_CORE"));
+//  for (auto& v : vds)
+//    std::cout << v << " ";
+//  std::cout << std::endl;
+//
+//
+//  
+//  //find edge properties
+//  std::cout << "ed label from vd 1 to 2: " << get_edge_label(g, get_ed(g,1,2,"parent").at(0)) << std::endl;
+//  //find edges by their property
+//  std::cout << "List all edges with the parent property:" << std::endl;
+//  auto eds = get_eds(g, "parent");
+//  for (const auto& ed : eds){
+//    std::cout << boost::source(ed,g) << " to " << boost::target(ed,g) << std::endl;
+//  }
+//
+//
+//  //GROUPS
+//  //make group - at first arbitrary
+//  std::vector<VD> vs = {10,12};
+//  auto i = make_group("Group1", vs, g);
+//  std::cout << " Group1 has vd: " << i << std::endl; 
+//
+//
+//  //#################################VISITORS TODO###########################################
+//  count_obj(g,1);
+//  accumulate(g,&Vertex::index, 1);
+//
+//  //###### PATHS/patterns #########
+//  //return the group members of group 
+//  std::cout << "The members of Group1 are the following:" << std::endl;
+//  //TODO make path queries like "is connected to group", or "is 'child' of cache" 
+//
+//
+//  //find subgraphs
+//  find_pattern(g); //TODO
+//
+//  ///NOTE!!!! in order to calculate properties simply make a subgraph and use std::accumlate... for instance...
+//
+//
+//
+//  //DISTANCES
+//  //calc custom distance
+//  //define a distance function:
+//  std::function<double(VD,VD,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
+//    {
+//      //the result, if the graph has no direct edge in any allowed category defined by this function
+//      double res = NOPATH;  //default 
+//      auto range = boost::out_edges(va, g); //TODO boost::out_edges works, if you "make clean" one in a while...!
+//      //check all edges for label "child"
+//       std::for_each (range.first, range.second,[&](const auto & ei){
+//        if (g[ei].label=="child" && vb==target(ei,g))
+//          res = 10.0;       //case of rising in the hierarchy
+//      });
+//      //check all edges for label "parent"
+//      std::for_each (range.first, range.second,[&](const auto & ei){
+//        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
+//          res = 0.0;        //case when descending in hierarchy
+//      });
+//
+//      return res;
+//    };
+//
+//
+//  std::cout << "distance (5,7): " << dist1(5,7,g) << std::endl;
+//  std::cout << "distance (8,9): " << dist1(8,9,g) << std::endl;
+//  std::cout << "path from 9 to 8:" << std::endl; 
+//  auto r1 = shortest_path(g, 8, 9, dist1); 
+//  for (auto vd : r1)
+//    std::cout << vd << " ";
+//  std::cout << std::endl;
+//
+//  //return clostest vertices of specified type sorted by distance
+//  auto cl_pus = find_closest_to(g, dist1, "HWLOC_OBJ_PU", 11);
+//  std::cout << "closest PUs relative to vd(11) with respect to user defined function dist1:" << std::endl;
+//  for (auto a : cl_pus){
+//    std::cout << a.first << " " ;
+//  }
+//  std::cout << std::endl;
+//  std::cout << "with distances (respectively):" << std::endl;
+//  for (auto a : cl_pus){
+//    std::cout << a.second << " " ;
+//  }
+//  std::cout << std::endl;
+//
+//  //dijstra
+//  auto r2 = dijkstra_spaths(g, 5, dist1);
+//  for(VD vd = 0; vd<r2.size(); ++vd)
+//    std::cout << "from vd 5 to "<< vd << ", shortest distance: " << r2[vd] << std::endl; 
+//
+//
+//  //dijstrap on a filtered graph
+//  //auto r3 = dijkstra_spaths(fgv, 5, dist1);
+//  //for(VD vd = 0; vd<r3.size(); ++vd)
+//  //  std::cout << "from vd 5 to "<< vd << ", shortest distance: " << r3[vd] << std::endl; 
+//
+//
+//  //TODO find partitioning
+//
+//  //ancestry iterator
+//  std::cout << "is 3 an ancestor of 11?: " << is_ancestor(11,3,g) << std::endl;
+//  std::cout << "is 11 an ancestor of 3?: " << is_ancestor(3,11,g) << std::endl;
+//
+//
+//
+//  //TODO return subgraph
+//  make_dotfile_nolabel(g,"totalnl.dot");
+//  make_dotfile(g,"total.dot");
+//
+//  //isolate a subgraph and reduce to hwloc relationships
+//  auto ctree2 = make_can_tree(g,14);
+//  make_dotfile_nolabel(ctree2,"hwloc.dot");
 
 
   //copy tests with copy graph

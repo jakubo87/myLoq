@@ -2,49 +2,10 @@
 #include "../include/init_graph.h"
 #include "../include/hwloc-test.h"
 
-//this is the interface, which simply uses the distance function.
-//it is recommended, to make the distance function not point to a certain graph, but to leave that as a parameter
-//double distance( 
-//              VD vd1,
-//              VD vd2,
-//              const graph_t& g,  // g is not THE graph, it is any graph included -> shadowing
-//              std::function<double(VD,VD,const graph_t&)> func){
-//  return func(vd1, vd2, g);
-//}
 
-//query the ed for the edge from va to vb with label (std::string)
-std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType& label){
-  std::vector<ED> res;
-  auto range = boost::edges(g);
-  std::for_each(range.first, range.second,[&](const auto& ed)
-      {
-        if( boost::source(ed,g)==va && 
-            boost::target(ed,g)==vb &&
-            g[ed].label==label)
-          res.push_back(ed);
-      }
-  );
-  return res;
-}
 
-//can only be const... or can it..?
-const EType& get_edge_label(const graph_t& g, const ED& ed){
-  return g[ed].label;
-}
 
-VD make_group(const std::string& name, const std::vector<VD>& cont, graph_t& g){
-  //insert group vertex into graph
-  auto v = boost::add_vertex(g);
-  put(&Vertex::type, g, v, name);
-  for (auto & vd : cont){ //for all vertex descriptors
-    //add a connection to the group members
-    auto e = boost::add_edge(v,vd,g).first;
-    put(&Edge::label, g, e, "member");
-  }
-  std::cout << "Group: " << name << " has been created" << std::endl;
-  //.. containing vertices ...
-  return v;
-}
+
 
 
 //name may be a bit misleading TODO: translation of hwloc_obj->type to string
@@ -117,10 +78,10 @@ graph_t init_graph(const hwloc_topology_t & t){
   auto nobj = hwloc_get_nbobjs_by_type(t, HWLOC_OBJ_NUMANODE);
   for (int i = 0; i<nobj; ++i){  
     auto obj = hwloc_get_obj_by_type(t, HWLOC_OBJ_NUMANODE, i);
-    boost::add_vertex(
-        {obj_type_toString(obj), //type
-         obj->logical_index},    //index
-         g); 
+    auto v = boost::add_vertex(g);
+    boost::put(&Vertex::vd, g, v, std::max(boost::get(&Vertex::vd, g))+1); //get new highest global index
+    boost::put(&Vertex::type, g, v, obj_type_toString(obj));
+    boost::put(&Vertex::index, g, v, obj->logical_index);
     std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
   }
 
@@ -132,36 +93,33 @@ graph_t init_graph(const hwloc_topology_t & t){
     std::cout << "adding Objects at level to graph: " <<  depth << std::endl;
     for (Index i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); ++i) {
       auto obj = hwloc_get_obj_by_depth(t, depth, i);
-      auto v = boost::add_vertex(
-         {obj_type_toString(obj), //type
-          obj->logical_index},    //index
-          g);  
-    std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
-    
+      auto v = boost::add_vertex(g);
+      boost::put(&Vertex::vd, g, v, std::max(boost::get(&Vertex::vd, g))+1); //get new highest global index
+      boost::put(&Vertex::type, g, v, obj_type_toString(obj));
+      boost::put(&Vertex::index, g, v, obj->logical_index);
+      std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
     //add relationships
     if (obj->type!=HWLOC_OBJ_MACHINE){
-      //from a childs point of view - the parent will have been added already and can be queried. Otherwise it would be necessary to find blank vertices and attach attributes to make them distinguishable  (alternative approach would be a depth first traversal, however parenthood can be over more than one level of depth) 
+      //from a childs point of view - the parent will have been added already and can be queried. Otherwise it would be necessary to find blank vertices and attach attributes to make them distinguishable
       //question remains how memory plays into this...
       //find all the parents:
       auto pa_obj = obj->parent;
-      auto pa_id = get_vds(g, obj_type_toString(pa_obj), pa_obj->logical_index);
+      auto pa_id = get_vds(
+          g, 
+          std::make_pair(&Vertex::type,obj_type_toString(pa_obj)),
+          std::make_pair(&Vertex::index,pa_obj->logical_index)
+        ).front();
       for(auto & p : pa_id){ // "for" not necessary in a tree (hwloc) there is only one parent, but maybe aliases...)
         // child
-        if (boost::add_edge(
-        v, //out
-        p, //in
-        {"child", 10.0}, // edge property
-        g).second)
-          {std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;}
+        auto ep = boost::add_edge(v, p, g);
+        boost::put(&Edge::ed, g, ep, std::max(boost::get(&Edge::ed, g))+1);
+        boost::put(&Edge::ed, g, ep, "child");
+        std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
         // parent
-        if (boost::add_edge(
-        p, //out
-        v, //in
-        {"parent", 0.0}, // edge property
-        g).second)
-          {std::cout << "Added Edge: (from " << p << " to " << v << ", label: parent" << std::endl;}
-        //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
-        //what is the multiset selector in edge list good for them..? TODO
+        auto ec = boost::add_edge(p, v, g);
+        boost::put(&Edge::ed, g, ec, std::max(boost::get(&Edge::ed, g))+1);
+        boost::put(&Edge::ed, g, ec, "child");
+        std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
         }
       }
     }
@@ -171,64 +129,27 @@ graph_t init_graph(const hwloc_topology_t & t){
   nobj = hwloc_get_nbobjs_by_type(t, HWLOC_OBJ_NUMANODE);
   for (int i = 0; i<nobj; ++i){
     auto obj = hwloc_get_obj_by_type(t, HWLOC_OBJ_NUMANODE, i);
-    auto v = get_vds(g, obj_type_toString(obj), obj->logical_index).at(0); 
+    auto v = get_vds(g,std::make_pair(&Vertex::type,obj_type_toString(obj)),std::make_pair(&Vertex::index, obj->logical_index)).front(); 
     //query parent vertex - again only go from child nodes to parents
     auto pobj = obj->parent;
-    auto p = get_vds(g, obj_type_toString(pobj), pobj->logical_index).at(0); 
+    auto p = get_vds(g,std::make_pair(&Vertex::type,obj_type_toString(pobj)),std::make_pair(&Vertex::index,pobj->logical_index)).front(); 
 
     // child
-    if (boost::add_edge( // the "if" may be unnecessary, because the container allows for parallel edges 
-    v, //out - the numa node vertices are being constructed first, so their vd is the index i 
-    p, //in
-    {"child", 10.0}, // edge property
-    g).second)
-      {std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;}
+    auto ep = boost::add_edge(v, p, g);
+    boost::put(&Edge::ed, g, ep, std::max(boost::get(&Edge::ed, g))+1);
+    boost::put(&Edge::ed, g, ep, "child");
+    std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
     // parent
-    if (boost::add_edge(
-    p, //out
-    v, //in
-    {"parent", 0.0}, // edge property
-    g).second)
-      {std::cout << "Added Edge: (from " << p << " to " << v << ", label: parent" << std::endl;}
-    //checked if 2 same edges will exist and make trouble -> multiple identical edges can coexist...
+    auto ec = boost::add_edge(p, v, g);
+    boost::put(&Edge::ed, g, ec, std::max(boost::get(&Edge::ed, g))+1);
+    boost::put(&Edge::ed, g, ec, "child");
+    std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
     //what is the multiset selector in edge list good for then..? 
   }
   return g;
 }
 
 
-//Dijkstra TODO return value
-//prints predeccessors from target to source (potentially for debugging..?)
-std::vector<VD> shortest_path(const graph_t& g, VD va, VD vb, std::function<double(VD,VD,const graph_t&)> func){
-  std::vector<VD> directions(num_vertices(g));
-
-  //###helper function to get the input right
-  std::function<double(ED)> f = [&](const ED& ed)
-    {
-      auto va = boost::source(ed, g);
-      auto vb = boost::target(ed, g); 
-      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
-    };
-
-  boost::dijkstra_shortest_paths(
-      g,  //graph
-      va, //source
-      boost::weight_map(boost::function_property_map<decltype(f),ED,double>(f))
-      .predecessor_map(boost::make_iterator_property_map(
-                      directions.begin(), get(boost::vertex_index, g))));
-
-  std::vector<VD> res;
-  VD p = vb; //target 
-  while (p != va) //finish
-  {
-    res.push_back(p);
-    p = directions[p];
-  }
-  res.push_back(p);
-  return res;
-}
-
-//possible language for paths: ("PU","child", "L1Cache") 
 
 
 
@@ -240,7 +161,7 @@ find_closest_to(const graph_t& g,
                 std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
                 VType type, VD start){
   //get all VDs of specified type
-  auto vds = get_vds(g, type);
+  auto vds = get_vds(g,std::make_pair(&Vertex::type,type));
   std::vector<std::pair<VD,double>> res(vds.size());
  // struct less_by_dist{
  //   bool operator(const auto& a, const auto& b) const { return a.second < b.second };

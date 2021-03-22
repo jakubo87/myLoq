@@ -8,11 +8,10 @@
 template<typename G>
 class label_writer {
 public:
-  void operator()(std::ostream& out, const VD& v) const {
+  void operator()(std::ostream& out, const vd_t& v) const {
     out << "[label=\"" << get(&Vertex::type, g, v) << " #" << get(&Vertex::index, g, v) << "\"]";
   }
-
-  void operator()(std::ostream& out, const ED& e) const {
+  void operator()(std::ostream& out, const ed_t& e) const {
     out << "[label=\"" << get(&Edge::label, g, e) << "\"]";
   }
   const G& g;
@@ -40,12 +39,9 @@ void find_pattern(const graph_t& g);
 
 bool is_ancestor(const VD& va, const VD& vb, const graph_t& g); //containment?!
 
-//making a tree from a group include only the parent/child relations as all other relations are not in the hwloc tree view. possibly other relationships in the future. however for custom relationships it is not guaranteed to have a tree
-graph_t make_can_tree(const graph_t& s, const VD& gv, const VType& type);
-graph_t make_can_tree(const graph_t& s, const VD& gv);
-
 
 //goto parent iterator -> only in the parent/child cathegory
+template<typename G>
 class anc_iterator{
   using self_t = anc_iterator;
   
@@ -65,7 +61,7 @@ class anc_iterator{
     return *this;
   }
  private:  
-  const graph_t& g;
+  const G& g;
   VD vd; //<-pos
 };
 
@@ -104,45 +100,6 @@ filtered_graph(const G& g, P EV::* p){ // std::function<bool(P)>& fun){ //TODO m
   return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
 }
 
-
-
-template<typename... Args >
-graph_t isolate_cathegories(const graph_t& s, Args&&... args){
-  graph_t g(s); //TODO filter graph
-return g;
-}
-//#### check if given ED has any of the cathegories/labels
-//template<> //empty case
-constexpr
-bool check_cathegory(const EType& cat){
-  return false;
-}
-//check if any cathegory matches
-template<typename C, typename... Args>
-constexpr
-bool check_cathegory(const EType& cat,C&& c, Args&&... args ){
-  return cat==c || check_cathegory(cat, args...);
-}
-
-
-template<typename... Args>
-constexpr
-bool is_cathegory(const graph_t& g, ED ed, Args&&... args){
-  auto cat = g[ed].label; 
-return check_cathegory(cat, args...); 
-}
-
-template<typename... Args>
-constexpr
-std::vector<ED> get_eds(const graph_t& g, Args... args){
-  std::vector<ED> res;
-  auto range = boost::edges(g);
-  std::for_each(range.first, range.second, [&](const auto& ed){
-    if (check_cathegory(g[ed].label, args...))
-      res.push_back(ed);
-    });
-  return res;
-}
 
 
 
