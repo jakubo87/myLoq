@@ -1,6 +1,7 @@
 #ifndef INIT_GRAPH_H
 #define INIT_GRAPH_H
 
+#include <type_traits>
 #include "../include/hwloc-test.h"
 
 using VType = std::string;
@@ -8,10 +9,10 @@ using Index = unsigned int;
 using Mem   = unsigned long int;
 using SIMD  = unsigned int;
 using RAND  = std::string;
-using VD    = unsigned long int; //eventually tags... for identifying vertices across  graphs
+using VID    = unsigned long int; //eventually tags... for identifying vertices across  graphs
 
 using EType = std::string;
-using ED    = unsigned long int;
+using EID    = unsigned long int;
 
 
 
@@ -23,13 +24,13 @@ struct Vertex {
   Index      index;
   Mem        mem_cap;
   SIMD       simd;
-  VD         vd; //global vertex descriptor to make graphs copyable and still reliably refer to the same vertex... overhead due to query, but meh..
+  VID         vid; //global vertex descriptor to make graphs copyable and still reliably refer to the same vertex... overhead due to query, but meh..
 };
 
 struct Edge {
   EType      label;
   double     weight=0;
-  ED         ed;
+  EID         eid;
 };
 
 
@@ -53,30 +54,68 @@ graph_t init_graph(const hwloc_topology_t & t);
 
 std::string obj_type_toString(hwloc_obj_t & obj);
 
-template<typename G>
-using Distance = std::function<double(vd_t,vd_t,const G&)>;
+template<typename G, typename V>
+using Distance = std::function<double(V,V,const G&)>;
 
-//conversion operator
-struct getkey{ //get vertex/edge descriptor, the key of the respective graph
-  template<typename G, typename EV>
-  typename boost::graph_traits<G>::key_type operator()(const G& g, EV ev){return boost::get(&Vertex::vd, g, ev);}
-};
 
+
+
+
+//get gid
+template<typename G, typename V>
+inline
+decltype(auto) get_vid(const G& g, V vd){ //const graph should prevent writes...
+  return boost::get(&Vertex::vid, g, vd);
+}
+
+template<typename G, typename E>
+inline
+decltype(auto) get_eid(const G& g, E ed){ //const graph should prevent writes...
+  return boost::get(&Edge::eid, g, ed);
+}
+
+////get key
+//template<typename G, typename EVID>
+//inline
+//decltype(auto) get_key(const G& g, EVID evid){ //const graph should prevent writes...
+//	std::enable_if(std::is_same<EV, boost::graph_traits<G>::vertex_descriptor>) return boost::get(boost::vertex_index, g, evid);
+//	std::enable_if(std::is_same<EV, boost::graph_traits<G>::edge_descriptor>) return //TODO boost::get(boost::edge, g, evid);
+//}
+
+
+
+static EID maxEID=0;
+static VID maxVID=0;
+
+
+//actually gets next id, not just max, but next_id would also not be satisfactory...
 template<typename G>
-double distance(VD vd1, VD vd2, const graph_t& g, Distance<G> func){
-  return func(getkey(g,vd1),getkey(g,vd2), g);
+EID getmax_eid(G& g){
+  return maxEID++;
+}
+template<typename G>
+VID getmax_vid(G& g){
+  return maxVID++;
+}
+
+template<typename G, typename V>
+double distance(V vd1, V vd2, const G& g, Distance<G,V> func){
+  return func(g,vd1,vd2);
 }
 
 //query the ed for the edge from va to vb with label (std::string)
-std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType& label){
+template <typename G, typename VD>
+//std::vector<typename boost::graph_traits<G>::edge_descriptor> 
+auto
+get_ed(const G& g, VD va, VD vb, const EType& label){
+  using ED = typename boost::graph_traits<G>::edge_descriptor;
   std::vector<ED> res;
-  auto range = boost::edges(g);
+  auto range = boost::out_edges(va,g);
   std::for_each(range.first, range.second,[&](const auto& ed)
       {
-        if( boost::source(ed,g)==va && 
-            boost::target(ed,g)==vb &&
-            g[ed].label==label)
-          res.push_back(boost::get(&Edge::ed, g , ed));
+        if( boost::target(ed,g)==vb &&
+            boost::get(&Edge::label, g, ed)==label)
+          res.push_back(ed);
       }
   );
   return res;
@@ -84,8 +123,8 @@ std::vector<ED> get_ed(const graph_t& g, VD va, VD vb, const EType& label){
 
 
 //returns the vertex descriptor to the group vertex
-template<typename G>
-VD make_group(const std::string& name, const std::vector<VD>& cont, G& g){
+template<typename G, typename V>
+V make_group(const std::string& name, const std::vector<V>& cont, G& g){
   //insert group vertex into graph
   auto v = add_vertex(g);
   put(&Vertex::type, g, v, name);
@@ -95,35 +134,32 @@ VD make_group(const std::string& name, const std::vector<VD>& cont, G& g){
     put(&Edge::label, g, e, "member");
   }
   std::cout << "Group: " << name << " has been created" << std::endl;
-  //.. containing vertices ...
   return v;
 }
 
 //Dijkstras shortest distances algorithm
 //returns the shortest distances. When no direct edge is available, accumulating distances
-template<typename G> //next step: make the output container a template 
+template<typename G, typename V> //next step: make the output container a template 
 std::vector<double>
-dijkstra_spaths(const G& g, VD va, Distance<G> func){
-  using ed_t = typename boost::graph_traits<G>::edge_descriptor; // VD are properties while vd_t are internal vertex descriptor types
-  using vd_t = typename boost::graph_traits<G>::vertex_descriptor;
+dijkstra_spaths(const G& g, V va, Distance<G,V> func){
+  using E = typename boost::graph_traits<G>::edge_descriptor; // VD are properties while vd_t are internal vertex descriptor types
+  //using vd_t = typename boost::graph_traits<G>::vertex_descriptor;
 
-  std::vector<VD> p(num_vertices(g));
+  std::vector<V> p(num_vertices(g));
   std::vector<double> d(num_vertices(g));
 
-  //###helper function to get the input right
-  std::function<double(ed_t)> f = [&](const ed_t& ed)
+  //###helper function to get the input/key right
+  std::function<double(E)> f = [&](const E& ed)
     {
-      auto va = boost::get(&Vertex::vd, g, boost::source(ed, g));
-      auto vb = boost::target(ed, g); 
-      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
+      V va_ = boost::source(ed, g);
+      V vb_ = boost::target(ed, g); 
+      return func(va_, vb_, g); // by capturing the graph here, you don't need to point to g later
     };
   
-  auto st_v = getkey(g,va);
-
-  boost::dijkstra_shortest_paths(
+    boost::dijkstra_shortest_paths(
       g,  //graph
-      st_v, //source
-      boost::weight_map(boost::function_property_map<decltype(f),ed_t,double>(f))
+      va, //source
+      boost::weight_map(boost::function_property_map<decltype(f),E,double>(f))
       //comment: do NOT(!!) use the make_function_propertymap() function. it fails to deduce correctly!
       .predecessor_map(boost::make_iterator_property_map(
                             p.begin(), get(boost::vertex_index, g)))
@@ -135,34 +171,34 @@ dijkstra_spaths(const G& g, VD va, Distance<G> func){
 
 //Dijkstra TODO return value
 //prints predeccessors from target to source (potentially for debugging..?)
-template<typename G>
-std::vector<VD> shortest_path(const G& g, VD va, VD vb, Distance func){
-  std::vector<VD> directions(num_vertices(g));
+template<typename G, typename V>
+std::vector<V> shortest_path(const G& g, V va, V vb, Distance<G,V> func){
+  std::vector<V> d(num_vertices(g));
 
-  using ed_t = typename boost::graph_traits<G>::edge_descriptor;
-  using vd_t = typename boost::graph_traits<G>::vertex_descriptor;
+  using E = typename boost::graph_traits<G>::edge_descriptor;
+  //using vd_t = typename boost::graph_traits<G>::vertex_descriptor;
   //###helper function to get the input right
-  std::function<double(ED)> f = [&](const ed_t& ed){
-      vd_t va = boost::source(ed, g);
-      vd_t vb = boost::target(ed, g); 
-      return func(va, vb, g); // by capturing the graph here, you don't need to point to g later
+  std::function<double(E)> f = [&](const E& ed){
+      V va_ = boost::source(ed, g);
+      V vb_ = boost::target(ed, g); 
+      return func(va_, vb_, g); // by capturing the graph here, you don't need to point to g later
     };
 
   boost::dijkstra_shortest_paths(
       g,  //graph
       va, //source
-      boost::weight_map(boost::function_property_map<decltype(f),ed_t,double>(f))
+      boost::weight_map(boost::function_property_map<decltype(f),E,double>(f))
       .predecessor_map(boost::make_iterator_property_map(
-                      directions.begin(), get(&Vertex::vd, g))));
+                      d.begin(), get(boost::vertex_index, g))));
 
-  std::vector<VD> res;
-  VD p = vb; //target 
+  std::vector<V> res;
+  V p = vb; //target 
   while (p != va) //finish
   {
     res.push_back(p);
-    p = directions[p];
+    p = d[p];
   }
-  res.push_back(p);
+  res.push_back(p); //reverses predecessor map into path
   return res;
 }
 
@@ -171,11 +207,25 @@ std::vector<VD> shortest_path(const G& g, VD va, VD vb, Distance func){
 std::vector<std::vector<int>>
 comb(const int k, const std::vector<int>& vec);
 
-std::vector<std::pair<VD,double>>
-find_closest_to(const graph_t& g,
-                std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
-                VType type, VD start);
 
+template<typename G, typename V>
+std::vector<std::pair<V,double>>
+find_closest_to(const G& g,
+                Distance<G,V> dist, //distance function check if this or the dijkstra find!)
+                VType type, V start){
+  //get all VDs of specified type
+  auto vds = get_vds(g,std::make_pair(&Vertex::type,type));
+  std::vector<std::pair<V,double>> res(vds.size());
+ // struct less_by_dist{
+ //   bool operator(const auto& a, const auto& b) const { return a.second < b.second };
+ // }
+  
+  std::transform(vds.begin(), vds.end(), res.begin(),[&](const auto& vd)
+    {return  std::make_pair(vd, dijkstra_spaths(g,start,dist)[vd]);});           // <---- here!
+
+  std::sort(res.begin(),res.end(),[&](const auto& a, const auto& b) { return a.second < b.second ; } );
+  return res;
+}
 
 
 
@@ -193,8 +243,8 @@ public:
     unsigned int& num_;
 };
 
-template<typename G>
-int count_obj(const G& g, VD vd){
+template<typename G, typename V>
+int count_obj(const G& g, V vd){
   unsigned int count=0;
   bfs_counter bfsc{count};
   boost::breadth_first_search(g,getkey(g,vd), boost::visitor(bfsc));
@@ -257,8 +307,8 @@ constexpr bool check_props(G&& g, V&& vd, P&& p, Args... args) {
 //query the vd from properties
 template<typename G, typename... Args>
 constexpr auto get_vds(const G& g, Args&& ... args){
-  using vd_t = typename boost::graph_traits<G>::vertex_descriptor;
-  std::vector<vd_t> res;
+  using V = typename boost::graph_traits<G>::vertex_descriptor;
+  std::vector<V> res;
   auto range = boost::vertices(g);
   std::for_each(range.first, range.second, [&](const auto & vd)
      {
@@ -300,68 +350,65 @@ struct VPred {
 
 //some getter and setter for use with global indexed VD and ED for cross graph-comminucation (for internal use, use the boost variant with their internal types 
 //setter
-template<typename T, typename G>
-inline void put(T Edge::* mptr, G& g, ED ed, T value){
-  boost::put(mptr, g, getkey(g,ed), value);
+template<typename T, typename G, typename E>
+inline void put(T Edge::* mptr, G& g, E ed, T value){
+  boost::put(mptr, g, ed, value);
 }
 
-template<typename T, typename G>
-inline void put(T Vertex::* mptr, G& g, VD vd, T value){
-  boost::put(mptr, g, getkey(g,vd), value);
+template<typename T, typename G, typename V>
+inline void put(T Vertex::* mptr, G& g, V vd, T value){
+  boost::put(mptr, g, vd, value);
 }
 
 //getter
-template<typename T, typename G>
+template<typename T, typename G, typename V>
 inline
-decltype(auto) get(T Vertex::* mptr, G& g, VD vd){
-  return boost::get(mptr, g,getkey(g, vd));
+decltype(auto) get(T Vertex::* mptr, G& g, V vd){
+  return boost::get(mptr, g, vd);
 }
-template<typename T, typename G>
+template<typename T, typename G, typename E>
 inline
-decltype(auto) get(T Edge::* mptr, G& g, ED ed){
-  return boost::get(mptr, g, getkey(g,ed));
+decltype(auto) get(T Edge::* mptr, G& g, E ed){
+  return boost::get(mptr, g, ed);
 }
 //const types
-template<typename T, typename G>
+template<typename T, typename G, typename V>
 inline
-decltype(auto) get(T Vertex::* mptr, const G& g, VD vd){
-  return boost::get(mptr, g,getkey(g, vd));
+decltype(auto) get(T Vertex::* mptr, const G& g, V vd){
+  return boost::get(mptr, g, vd);
 }
-template<typename T, typename G>
+template<typename T, typename G, typename E>
 inline
-decltype(auto) get(T Edge::* mptr, const G& g, ED ed){
-  return boost::get(mptr, g, getkey(g,ed));
+decltype(auto) get(T Edge::* mptr, const G& g, E ed){
+  return boost::get(mptr, g, ed);
 }
 
 //add vertex/edge, yes: adding an object with the property at once is discouraged, but still possible via boost::add_xxxx(...)
-template<typename G>
+template<typename G, typename V>
 inline
-VD add_vertex(G& g) {
-  auto v = boost::add_vertex(g);
-  auto vd =  std::max(boost::get(&Vertex::vd,g))+1;
-  boost::put(&Vertex::vd, g, v, vd);
-  return vd; 
+V add_vertex(G& g) {
+  V v = boost::add_vertex(g);
+  boost::put(&Vertex::vid, g, v, getmax_vid(g));
+  return v; 
 }
 
-template<typename G>
+template<typename G, typename V, typename E>
 inline
-ED add_edge(VD va, VD vb, G& g){
-  auto e = boost::add_edge(getkey(g,va),getkey(g,vb), g).first; //in the current graph setup parallel edges are allowed, so .second is never false
-  auto ed = std::max(boost::get(&Edge::ed, g))+1;
-  boost::put(&Edge::ed, g, e, ed);
-  return ed;
+E add_edge(V va, V vb, G& g){
+  E e = boost::add_edge(va, vb, g).first; //in the current graph setup parallel edges are allowed, so .second is never false
+  boost::put(&Edge::eid, g, e, getmax_eid(g));
+  return e;
 }
 
-template<typename G>
-inline void remove_edge(ED ed, G& g){
-  boost::remove_edge(getkey(g, ed), g); //this invalidates all edge iterators... or it would if the werent indexed!
+template<typename G, typename E>
+inline void remove_edge(E ed, G& g){
+  boost::remove_edge(ed, g); //this invalidates all edge iterators... or it would if the werent indexed!
 }
 
-template<typename G>
-inline void remove_vertex(VD vd, G& g){
-  auto v = getkey(g, vd);
-  boost::clear_vertex(v,g);    //removes all edges connected to the vertex
-  boost::remove_vertex(v,g);   //removes the vertex and invalidates all vertex descriptors larger than vd (and of coursee again all edge descriptors
+template<typename G, typename V>
+inline void remove_vertex(V vd, G& g){
+  boost::clear_vertex(vd,g);    //removes all edges connected to the vertex
+  boost::remove_vertex(vd,g);   //removes the vertex and invalidates all vertex descriptors larger than vd (and of coursee again all edge descriptors
 }
 
 

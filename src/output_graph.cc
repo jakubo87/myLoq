@@ -3,23 +3,6 @@
 #include "../include/hwloc-test.h"
 
 
-//is va a descendent of vb?
-bool is_ancestor(const VD& va, const VD& vb, const graph_t& g){
-
-  bool res=false;
-  anc_iterator it(g,va);
-  VD vcur;
-  do{
-    vcur=*it;      //update
-    if (vcur==vb){ //check
-      res=true;    //success
-      break;       //exit
-    }
-  }
-  while(*(++it)!=vcur);  //exit if nothing happens (root node is reached)
-
-  return res;
-}
 
 
 

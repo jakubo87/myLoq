@@ -6,13 +6,22 @@
 
 //####### Printing the graph
 template<typename G>
-class label_writer {
+class label_writer{
+  using E = typename boost::graph_traits<G>::edge_descriptor;
+  using V = typename boost::graph_traits<G>::vertex_descriptor;
+
 public:
-  void operator()(std::ostream& out, const vd_t& v) const {
+  label_writer() = delete; //must have reference to graph
+  void operator()(std::ostream& out, const V& v) const {
     out << "[label=\"" << get(&Vertex::type, g, v) << " #" << get(&Vertex::index, g, v) << "\"]";
   }
-  void operator()(std::ostream& out, const ed_t& e) const {
-    out << "[label=\"" << get(&Edge::label, g, e) << "\"]";
+  void operator()(std::ostream& out, const E& e) const {
+    if(get(&Edge::label, g, e) == "member")
+      out << "[label=\"" << get(&Edge::label, g, e) << "\", color=red]";
+    if(get(&Edge::label, g, e) == "replicates")
+      out << "[label=\"" << get(&Edge::label, g, e) << "\", color=blue]";
+    else
+      out << "[label=\"" << get(&Edge::label, g, e) << "\", color=black]";
   }
   const G& g;
 };
@@ -35,20 +44,21 @@ void make_dotfile_nolabel(const G& g, const std::string& dotf = "out.dot"){
 }
 
 
-void find_pattern(const graph_t& g);
+//void find_pattern(const graph_t& g);
 
-bool is_ancestor(const VD& va, const VD& vb, const graph_t& g); //containment?!
 
 
 //goto parent iterator -> only in the parent/child cathegory
 template<typename G>
 class anc_iterator{
   using self_t = anc_iterator;
+  using V = typename boost::graph_traits<G>::vertex_descriptor;
+  using E = typename boost::graph_traits<G>::edge_descriptor;
   
  public:
   anc_iterator()=delete;
-  anc_iterator(const graph_t& g, const VD& vd): g(g), vd(vd){}  //ctor 
-  VD operator*() const {return vd;} //this one makes a copy 
+  anc_iterator(const G& g, const V& vd): g(g), vd(vd){}  //ctor 
+  V operator*() const {return vd;} 
 
   bool operator==(const self_t& rhs) const {return (&g==&rhs.g && vd==rhs.vd);} //comparing identity, not equality of the graph
 
@@ -62,10 +72,28 @@ class anc_iterator{
   }
  private:  
   const G& g;
-  VD vd; //<-pos
+  V vd; //<-pos
 };
 
 
+//is va a descendent of vb?
+template<typename G, typename V>
+bool is_ancestor(const V& va, const V& vb, const G& g){
+
+  bool res=false;
+  anc_iterator<G> it(g,va);
+  V vcur;
+  do{
+    vcur=*it;      //update
+    if (vcur==vb){ //check
+      res=true;    //success
+      break;       //exit
+    }
+  }
+  while(*(++it)!=vcur);  //exit if nothing happens (root node is reached)
+
+  return res;
+}
 
 //###### Implementation
 template <typename Map> //will SFINAE make it right? if we use a type, that is only existent in Edge or Vertex

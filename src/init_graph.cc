@@ -79,7 +79,7 @@ graph_t init_graph(const hwloc_topology_t & t){
   for (int i = 0; i<nobj; ++i){  
     auto obj = hwloc_get_obj_by_type(t, HWLOC_OBJ_NUMANODE, i);
     auto v = boost::add_vertex(g);
-    boost::put(&Vertex::vd, g, v, std::max(boost::get(&Vertex::vd, g))+1); //get new highest global index
+    boost::put(&Vertex::vid, g, v, getmax_vid(g)); //get new highest global index
     boost::put(&Vertex::type, g, v, obj_type_toString(obj));
     boost::put(&Vertex::index, g, v, obj->logical_index);
     std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
@@ -94,7 +94,7 @@ graph_t init_graph(const hwloc_topology_t & t){
     for (Index i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); ++i) {
       auto obj = hwloc_get_obj_by_depth(t, depth, i);
       auto v = boost::add_vertex(g);
-      boost::put(&Vertex::vd, g, v, std::max(boost::get(&Vertex::vd, g))+1); //get new highest global index
+      boost::put(&Vertex::vid, g, v, getmax_vid(g)); //get new highest global index
       boost::put(&Vertex::type, g, v, obj_type_toString(obj));
       boost::put(&Vertex::index, g, v, obj->logical_index);
       std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
@@ -108,17 +108,17 @@ graph_t init_graph(const hwloc_topology_t & t){
           g, 
           std::make_pair(&Vertex::type,obj_type_toString(pa_obj)),
           std::make_pair(&Vertex::index,pa_obj->logical_index)
-        ).front();
+        );
       for(auto & p : pa_id){ // "for" not necessary in a tree (hwloc) there is only one parent, but maybe aliases...)
         // child
-        auto ep = boost::add_edge(v, p, g);
-        boost::put(&Edge::ed, g, ep, std::max(boost::get(&Edge::ed, g))+1);
-        boost::put(&Edge::ed, g, ep, "child");
+        auto ep = boost::add_edge(v, p, g).first;
+        boost::put(&Edge::eid, g, ep, getmax_eid(g));
+        boost::put(&Edge::label, g, ep, "child");
         std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
         // parent
-        auto ec = boost::add_edge(p, v, g);
-        boost::put(&Edge::ed, g, ec, std::max(boost::get(&Edge::ed, g))+1);
-        boost::put(&Edge::ed, g, ec, "child");
+        auto ec = boost::add_edge(p, v, g).first;
+        boost::put(&Edge::eid, g, ec, getmax_eid(g));
+        boost::put(&Edge::label, g, ec, "child");
         std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
         }
       }
@@ -135,14 +135,14 @@ graph_t init_graph(const hwloc_topology_t & t){
     auto p = get_vds(g,std::make_pair(&Vertex::type,obj_type_toString(pobj)),std::make_pair(&Vertex::index,pobj->logical_index)).front(); 
 
     // child
-    auto ep = boost::add_edge(v, p, g);
-    boost::put(&Edge::ed, g, ep, std::max(boost::get(&Edge::ed, g))+1);
-    boost::put(&Edge::ed, g, ep, "child");
+    auto ep = boost::add_edge(v, p, g).first;
+    boost::put(&Edge::eid, g, ep, getmax_eid(g));
+    boost::put(&Edge::label, g, ep, "child");
     std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
     // parent
-    auto ec = boost::add_edge(p, v, g);
-    boost::put(&Edge::ed, g, ec, std::max(boost::get(&Edge::ed, g))+1);
-    boost::put(&Edge::ed, g, ec, "child");
+    auto ec = boost::add_edge(p, v, g).first;
+    boost::put(&Edge::eid, g, ec, getmax_eid(g));
+    boost::put(&Edge::label, g, ec, "child");
     std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
     //what is the multiset selector in edge list good for then..? 
   }
@@ -153,26 +153,7 @@ graph_t init_graph(const hwloc_topology_t & t){
 
 
 
-//naive implementation to provide requests like "show me clostest PUs" (close as defined by the function...)
-//"naive" as it does assume symmetry
-//so warning you might get trapped if you assumed the wrong amount, or if you take advantage of PUs, that are there but may be detrimental to performance due to distance, 
-std::vector<std::pair<VD,double>>
-find_closest_to(const graph_t& g,
-                std::function<double(VD,VD,const graph_t&)> dist, //distance function (TODO check if this or the dijkstra find!)
-                VType type, VD start){
-  //get all VDs of specified type
-  auto vds = get_vds(g,std::make_pair(&Vertex::type,type));
-  std::vector<std::pair<VD,double>> res(vds.size());
- // struct less_by_dist{
- //   bool operator(const auto& a, const auto& b) const { return a.second < b.second };
- // }
-  
-  std::transform(vds.begin(), vds.end(), res.begin(),[&](const auto& vd)
-    {return  std::make_pair(vd, dijkstra_spaths(g,start,dist)[vd]);});           // <---- here!
 
-  std::sort(res.begin(),res.end(),[&](const auto& a, const auto& b) { return a.second < b.second ; } );
-  return res;
-}
 
 //TODO establish a somewhat reasonable default distance function, for the case, that the user doesn't provide one, subject to change: depending on what data from hwloc will be transported over here
 //... and make overloads or each function, where a canonical distance can be of use

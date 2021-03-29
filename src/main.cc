@@ -102,15 +102,15 @@ int main ()
 
   //add new relationship: replicatea
   //find last level cache TODO (for all CUs)
-  auto l2 = get_vds(g, VType("HWLOC_OBJ_L2CACHE"));
-  auto mem = get_vds(g, VType("HWLOC_OBJ_NUMANODE"));
+  auto l2 = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_L2CACHE"));
+  auto mem = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_NUMANODE"));
   for (auto vl : l2){
     for (auto vm : mem){
      //this commented line was the former hoped sulotion. however it turned out, that the edges would not appear in the graph. Only like done underneath. This may be some quirk or some larger underlying problem like can be the invalidation of indizes/descriptors and iterators when modifying the graph
-     //ED e = add_edge(vl,vm, g); //<-- this alone doesn't work!? TODO
-      auto p = boost::add_edge(vl,vm, g);
-      auto e = p.first;
-      bool ed = p.second;
+      auto e = add_edge(vl,vm, g).first; //<-- this alone doesn't work!? TODO
+     // auto p = boost::add_edge(vl,vm, g);
+     // auto e = p.first;
+     // bool ed = p.second;
       put(&Edge::label,g,e, "replicates");
       std::cout << "HEY!!!!! add edge from " << vl << " to "<< vm << "?" << std::endl; // ed <<  std::endl;
     }
