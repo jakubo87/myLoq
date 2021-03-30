@@ -1,7 +1,6 @@
 #ifndef INIT_GRAPH_H
 #define INIT_GRAPH_H
 
-#include <type_traits>
 #include "../include/hwloc-test.h"
 
 using VType = std::string;
@@ -50,7 +49,8 @@ using ed_t = typename boost::graph_traits<G>::edge_descriptor;
 template<typename G>
 using vd_t = typename boost::graph_traits<G>::vertex_descriptor;
 
-graph_t init_graph(const hwloc_topology_t & t);
+//graph_t init_graph(const hwloc_topology_t & t);
+graph_t init_graph();
 
 std::string obj_type_toString(hwloc_obj_t & obj);
 
@@ -87,6 +87,8 @@ decltype(auto) get_eid(const G& g, E ed){ //const graph should prevent writes...
 static EID maxEID=0;
 static VID maxVID=0;
 
+//TODO closest objects without dijkstra
+//obtaining descriptor from gid possibly though scanning all possible keys as not access to values possible
 
 //actually gets next id, not just max, but next_id would also not be satisfactory...
 template<typename G>
@@ -103,23 +105,6 @@ double distance(V vd1, V vd2, const G& g, Distance<G,V> func){
   return func(g,vd1,vd2);
 }
 
-//query the ed for the edge from va to vb with label (std::string)
-template <typename G, typename VD>
-//std::vector<typename boost::graph_traits<G>::edge_descriptor> 
-auto
-get_ed(const G& g, VD va, VD vb, const EType& label){
-  using ED = typename boost::graph_traits<G>::edge_descriptor;
-  std::vector<ED> res;
-  auto range = boost::out_edges(va,g);
-  std::for_each(range.first, range.second,[&](const auto& ed)
-      {
-        if( boost::target(ed,g)==vb &&
-            boost::get(&Edge::label, g, ed)==label)
-          res.push_back(ed);
-      }
-  );
-  return res;
-}
 
 
 //returns the vertex descriptor to the group vertex
@@ -287,8 +272,6 @@ T accumulate (const G& g,T Vertex::* mptr , V st_vd){
 
 
 
-//IMPLEMENTATION
-
 
 //########QUERYING 
 //check a tuple for its properties (type based)
@@ -320,6 +303,23 @@ constexpr auto get_vds(const G& g, Args&& ... args){
 
 
 
+//query the ed for the edge from va to vb with label (std::string)
+template <typename G, typename VD>
+//std::vector<typename boost::graph_traits<G>::edge_descriptor> 
+auto
+get_ed(const G& g, VD va, VD vb, const EType& label){
+  using ED = typename boost::graph_traits<G>::edge_descriptor;
+  std::vector<ED> res;
+  auto range = boost::out_edges(va,g);
+  std::for_each(range.first, range.second,[&](const auto& ed)
+      {
+        if( boost::target(ed,g)==vb &&
+            boost::get(&Edge::label, g, ed)==label)
+          res.push_back(ed);
+      }
+  );
+  return res;
+}
 
 //more general graph querying properties
 //same as above, only not only for vertices but also edges in the form of query(T*, args) meaning a property and one ore more constraints (like larger than x, smaller than y...  and then when the next T* is found the process is repeated for the next predicates until the query ends also get will be utilised instead of makeing tuples
@@ -331,19 +331,33 @@ constexpr auto get_vds(const G& g, Args&& ... args){
 
 template<typename T, typename G>
 struct VPred {
-  using Edge = typename boost::graph_traits<G>::edge_descriptor;
-  using Vertex = typename boost::graph_traits<G>::vertex_descriptor;
+  using E = typename boost::graph_traits<G>::edge_descriptor;
+  using V = typename boost::graph_traits<G>::vertex_descriptor;
   //ctor
-  VPred(const G* g, const T Vertex::* mptr, const T& value): g_(g), mptr_(mptr), value_(value) {}
-  bool operator()(const Edge) const {return true;}
-  bool operator()(const Vertex v) const {
+ // VPred(const G& g, const T Vertex::* mptr, const T& value): g_(&g), mptr_(mptr), value_(value) {}
+  bool operator()(const E) const {return true;}
+  bool operator()(const V v) const {
     return boost::get(mptr_,*g_, v)< value_;
   }
-  const G* g_;
-  const T Vertex::* mptr_;
-  const T value_;
+  G* g_;
+  T Vertex::* mptr_;
+  T value_;
 };
 
+template<typename T, typename G>
+struct EPred {
+  using E = typename boost::graph_traits<G>::edge_descriptor;
+  using V = typename boost::graph_traits<G>::vertex_descriptor;
+  //ctor
+  EPred(const G& g, const T Edge::* mptr, const T& value): g_(&g), mptr_(mptr), value_(value) {}
+  bool operator()(const V) const {return true;}
+  bool operator()(const E e) const {
+    return boost::get(mptr_,*g_, e)= value_;
+  }
+  G* g_;
+  T Edge::* mptr_;
+  T value_;
+};
 
 
 

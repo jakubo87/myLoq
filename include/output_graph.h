@@ -13,15 +13,15 @@ class label_writer{
 public:
   label_writer() = delete; //must have reference to graph
   void operator()(std::ostream& out, const V& v) const {
-    out << "[label=\"" << get(&Vertex::type, g, v) << " #" << get(&Vertex::index, g, v) << "\"]";
+    out << "[label=\"" << boost::get(&Vertex::type, g, v) << " #" << boost::get(&Vertex::index, g, v) << "\"]";
   }
   void operator()(std::ostream& out, const E& e) const {
-    if(get(&Edge::label, g, e) == "member")
-      out << "[label=\"" << get(&Edge::label, g, e) << "\", color=red]";
-    if(get(&Edge::label, g, e) == "replicates")
-      out << "[label=\"" << get(&Edge::label, g, e) << "\", color=blue]";
+    if(boost::get(&Edge::label, g, e) == "member")
+      out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=red]";
+    if(boost::get(&Edge::label, g, e) == "replicates")
+      out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=blue]";
     else
-      out << "[label=\"" << get(&Edge::label, g, e) << "\", color=black]";
+      out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=black]";
   }
   const G& g;
 };
@@ -63,11 +63,12 @@ class anc_iterator{
   bool operator==(const self_t& rhs) const {return (&g==&rhs.g && vd==rhs.vd);} //comparing identity, not equality of the graph
 
   //rise operator
-  self_t operator++(){
+  self_t& operator++(){
     auto range = boost::out_edges(vd,g);
-    auto it = std::find_if(range.first, range.second, [&](const auto& ed){return g[ed].label=="child";});
+    auto it = std::find_if(range.first, range.second, [&](const auto& ed){
+      return boost::get(&Edge::label, g, ed)=="child";}); // there should be only one
     if (it!=range.second) //if is someone's child, if not, does nothing
-      vd=boost::target(*it,g);
+      vd = boost::target(*it,g);
     return *this;
   }
  private:  
@@ -109,26 +110,34 @@ struct constrained_map {
   //std::function<bool(res_t)> fun_= [&](auto res){return res!=0;};
 };
 
-//NOTE: maybe just use the graph without & -> by copy, to preserve it and not accidentally write in it...
-template<typename P, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
+////NOTE: maybe just use the graph without & -> by copy, to preserve it and not accidentally write in it...
+//template<typename P, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
+//decltype(auto)
+//filtered_graph(G& g, P EV::* p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+//    //std::function fun
+//  using map_t = decltype(boost::get(p,g));
+//  constrained_map<map_t> filter(boost::get(p,g));
+//  return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
+//}
+//
+//template<typename P, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
+//decltype(auto)
+//filtered_graph(const G& g, P EV::* p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+//    //std::function fun
+//  using map_t = decltype(boost::get(p,g));
+//  constrained_map<map_t> filter(boost::get(p,g));
+//  return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
+//}
+
+
+template<typename T, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
-filtered_graph(G& g, P EV::* p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
-    //std::function fun
-  using map_t = decltype(boost::get(p,g));
-  constrained_map<map_t> filter(boost::get(p,g));
-  return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
+filtered_graph(G& g, T EV::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+  VPred<T,G> vfil{&g,p,value};
+  using fil_t = decltype(vfil);
+ // EPred<P, G>  efil(g);
+
+  return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
 }
-
-template<typename P, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
-decltype(auto)
-filtered_graph(const G& g, P EV::* p){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
-    //std::function fun
-  using map_t = decltype(boost::get(p,g));
-  constrained_map<map_t> filter(boost::get(p,g));
-  return boost::filtered_graph<G, constrained_map<map_t>>(g, filter);
-}
-
-
-
 
 #endif

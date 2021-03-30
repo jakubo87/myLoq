@@ -58,7 +58,15 @@ std::string obj_type_toString(hwloc_obj_t & obj){
 //}
 
 
-graph_t init_graph(const hwloc_topology_t & t){
+//graph_t init_graph(const hwloc_topology_t & t){
+graph_t init_graph(){
+  //hwloc_init
+  hwloc_topology_t t;
+  hwloc_topology_init(&t);  // initialization
+  hwloc_topology_set_io_types_filter(t, HWLOC_TYPE_FILTER_KEEP_ALL); //for all the devices, or...
+  //hwloc_topology_set_io_types_filter(t,HWLOC_TYPE_FILTER_KEEP_IMPORTANT);
+  hwloc_topology_load(t);   // actual detection
+  //std::cout << t <<"\n"; //print nodes
 
   graph_t g;
   int max_depth=0;
@@ -118,8 +126,8 @@ graph_t init_graph(const hwloc_topology_t & t){
         // parent
         auto ec = boost::add_edge(p, v, g).first;
         boost::put(&Edge::eid, g, ec, getmax_eid(g));
-        boost::put(&Edge::label, g, ec, "child");
-        std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
+        boost::put(&Edge::label, g, ec, "parent");
+        std::cout << "Added Edge: (from " << v << " to " << p << ", label: parent" << std::endl;
         }
       }
     }
@@ -142,10 +150,12 @@ graph_t init_graph(const hwloc_topology_t & t){
     // parent
     auto ec = boost::add_edge(p, v, g).first;
     boost::put(&Edge::eid, g, ec, getmax_eid(g));
-    boost::put(&Edge::label, g, ec, "child");
-    std::cout << "Added Edge: (from " << v << " to " << p << ", label: child" << std::endl;
+    boost::put(&Edge::label, g, ec, "parent");
+    std::cout << "Added Edge: (from " << v << " to " << p << ", label: parent" << std::endl;
     //what is the multiset selector in edge list good for then..? 
   }
+  //cleaning up:
+  hwloc_topology_destroy(t); //since data was copied hwloc is not needed anymore
   return g;
 }
 

@@ -80,18 +80,10 @@
 int main ()
 {
   //#######################   INITIALISATION   ################################################
-  //hwloc_init
-  hwloc_topology_t t;
-  hwloc_topology_init(&t);  // initialization
-  hwloc_topology_set_io_types_filter(t, HWLOC_TYPE_FILTER_KEEP_ALL); //for all the devices, or...
-  //hwloc_topology_set_io_types_filter(t,HWLOC_TYPE_FILTER_KEEP_IMPORTANT);
-  hwloc_topology_load(t);   // actual detection
-  //std::cout << t <<"\n"; //print nodes
+
   
-  auto g = init_graph(t);
+  auto g = init_graph(); //init lokal machine
 //TODO expand graph!
-  //cleaning up:
-  hwloc_topology_destroy(t); //since data was copied hwloc is not needed anymore
  
   //TODO extensible properties or adding properties the boost way... 
   //struct Edge {
@@ -100,7 +92,7 @@ int main ()
   //};
   //######################      UPDATING SETUP           #####################################
 
-  //add new relationship: replicatea
+  //add new relationship: replicates
   //find last level cache TODO (for all CUs)
   auto l2 = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_L2CACHE"));
   auto mem = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_NUMANODE"));
@@ -108,14 +100,11 @@ int main ()
     for (auto vm : mem){
      //this commented line was the former hoped sulotion. however it turned out, that the edges would not appear in the graph. Only like done underneath. This may be some quirk or some larger underlying problem like can be the invalidation of indizes/descriptors and iterators when modifying the graph
       auto e = add_edge(vl,vm, g).first; //<-- this alone doesn't work!? TODO
-     // auto p = boost::add_edge(vl,vm, g);
-     // auto e = p.first;
-     // bool ed = p.second;
       put(&Edge::label,g,e, "replicates");
-      std::cout << "HEY!!!!! add edge from " << vl << " to "<< vm << "?" << std::endl; // ed <<  std::endl;
     }
   }
 
+  boost::print_graph(g);
 
   //###################################################################
   //TESTS:
@@ -129,20 +118,19 @@ int main ()
 
   //VPred<Index,graph_t> twoorless{&g,&Vertex::index,2};
 
- // auto vfil = filtered_graph(g, &Vertex::index);
- // boost::print_graph(vfil);
+  auto fgv = filtered_graph(g, &Vertex::index, Index(2));
+  std::cout << "show only vertices with index < 2" << std::endl; 
+  boost::print_graph(fgv);
+  make_dotfile(fgv, "filtered_edge_graph.dot");
 
-
-//  auto  fge = filtered_graph(g, &Edge::weight); 
+//  auto  fge = filtered_graph(g, &Edge::label); 
 //  //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
 //  // display all remaining vertices
-//  std::cout << "show only vertices with index != 0" << std::endl; 
 //  auto fil_r = boost::edges(fge);
 //  std::for_each(fil_r.first, fil_r.second, [&](auto e){ std::cout << boost::get(&Edge::label, g, e) << " ";});
 //  std::cout << std::endl;
 //  boost::print_graph(g); 
 //  boost::print_graph(fge);
-//  make_dotfile(fge, "filtered_edge_graph.dot");
 //  
 //
 //  //##################################    MATHS     #################################################
@@ -289,15 +277,14 @@ int main ()
 //
 //  //TODO find partitioning
 //
-//  //ancestry iterator
-//  std::cout << "is 3 an ancestor of 11?: " << is_ancestor(11,3,g) << std::endl;
-//  std::cout << "is 11 an ancestor of 3?: " << is_ancestor(3,11,g) << std::endl;
+  //ancestry iterator
+  std::cout << "is 3 an ancestor of 11?: " << is_ancestor(11,3,g) << std::endl;
+  std::cout << "is 11 an ancestor of 3?: " << is_ancestor(3,11,g) << std::endl;
 //
 //
 //
-//  //TODO return subgraph
-//  make_dotfile_nolabel(g,"totalnl.dot");
-//  make_dotfile(g,"total.dot");
+  make_dotfile_nolabel(g,"totalnl.dot");
+  make_dotfile(g,"total.dot");
 //
 //  //isolate a subgraph and reduce to hwloc relationships
 //  auto ctree2 = make_can_tree(g,14);
@@ -305,9 +292,9 @@ int main ()
 
 
   //copy tests with copy graph
-  //graph_t cfg(); //deep copy of filtered graph (is this even possible...?, what about the vertex indices...?
-  //boost::copy_graph(g, cfg);
-  //make_dotfile_nolabel(cfg, "copied_nolabel.dot");
+  graph_t cfg; //deep copy of filtered graph (is this even possible...?, what about the vertex indices...?
+  boost::copy_graph(g, cfg);
+  make_dotfile_nolabel(cfg, "copied_nolabel.dot");
 
   return 0;
 }
