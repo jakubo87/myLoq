@@ -202,13 +202,13 @@ int main ()
 //  std::cout << " Group1 has vd: " << i << std::endl; 
 //
 //
-//  //#################################VISITORS TODO###########################################
+//  //#################################      VISITORS       TODO###########################################
 //  count_obj(g,1);
 //  accumulate(g,&Vertex::index, 1);
 //
 //  //###### PATHS/patterns #########
 //  //return the group members of group 
-//  std::cout << "The members of Group1 are the following:" << std::endl;
+//  //std::cout << "The members of Group1 are the following:" << std::endl;
 //  //TODO make path queries like "is connected to group", or "is 'child' of cache" 
 //
 //
@@ -219,31 +219,34 @@ int main ()
 //
 //
 //
-//  //DISTANCES
-//  //calc custom distance
-//  //define a distance function:
-//  std::function<double(VD,VD,const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
-//    {
-//      //the result, if the graph has no direct edge in any allowed category defined by this function
-//      double res = NOPATH;  //default 
-//      auto range = boost::out_edges(va, g); //TODO boost::out_edges works, if you "make clean" one in a while...!
-//      //check all edges for label "child"
-//       std::for_each (range.first, range.second,[&](const auto & ei){
-//        if (g[ei].label=="child" && vb==target(ei,g))
-//          res = 10.0;       //case of rising in the hierarchy
-//      });
-//      //check all edges for label "parent"
-//      std::for_each (range.first, range.second,[&](const auto & ei){
-//        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
-//          res = 0.0;        //case when descending in hierarchy
-//      });
-//
-//      return res;
-//    };
-//
-//
-//  std::cout << "distance (5,7): " << dist1(5,7,g) << std::endl;
-//  std::cout << "distance (8,9): " << dist1(8,9,g) << std::endl;
+  //#####################################       DISTANCES          #######################################
+  //calc custom distance
+  //define a distance function:
+  //NOTE: it may be benefivial defining it in a separate header and making it a template to be able to use iton filtered graphs
+  //though it may not be useful, as non-modifying distance calculations will take place on the original graph
+  //... or maybe on a filtered graph..?
+  std::function<double(VD,VD, const graph_t&)> dist1 =  [&](auto va, auto vb, const graph_t& g)
+    {
+      //the result, if the graph has no direct edge in any allowed category defined by this function
+      double res = NOPATH;  //default 
+      auto range = boost::out_edges(va, g); //TODO boost::out_edges works, if you "make clean" one in a while...!
+      //check all edges for label "child"
+       std::for_each (range.first, range.second,[&](const auto & ei){
+        if (g[ei].label=="child" && vb==target(ei,g))
+          res = 10.0;       //case of rising in the hierarchy
+      });
+      //check all edges for label "parent"
+      std::for_each (range.first, range.second,[&](const auto & ei){
+        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
+          res = 0.0;        //case when descending in hierarchy
+      });
+
+      return res;
+    };
+
+
+  std::cout << "distance (5,7): " << dist1(5,7,g) << std::endl;
+  std::cout << "distance (8,9): " << dist1(8,9,g) << std::endl;
 //  std::cout << "path from 9 to 8:" << std::endl; 
 //  auto r1 = shortest_path(g, 8, 9, dist1); 
 //  for (auto vd : r1)
@@ -283,8 +286,6 @@ int main ()
 //
 //
 //
-  make_dotfile_nolabel(g,"totalnl.dot");
-  make_dotfile(g,"total.dot");
 //
 //  //isolate a subgraph and reduce to hwloc relationships
 //  auto ctree2 = make_can_tree(g,14);
@@ -295,6 +296,14 @@ int main ()
   graph_t cfg; //deep copy of filtered graph (is this even possible...?, what about the vertex indices...?
   boost::copy_graph(g, cfg);
   make_dotfile_nolabel(cfg, "copied_nolabel.dot");
+
+  //####################################     K-PARTITIONS     #################################################
+  //make k partitions
+  k_partitions(g,2,dist1);
+
+
+  make_dotfile_nolabel(g,"totalnl.dot");
+  make_dotfile(g,"total.dot");
 
   return 0;
 }

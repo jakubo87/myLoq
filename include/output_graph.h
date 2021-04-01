@@ -133,11 +133,69 @@ struct constrained_map {
 template<typename T, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
 filtered_graph(G& g, T EV::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+  //make a function, that chooses between edges and vertices...
   VPred<T,G> vfil{&g,p,value};
   using fil_t = decltype(vfil);
  // EPred<P, G>  efil(g);
 
   return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
 }
+
+//simple algorithm to make k partitions of CUs by removing k-1 longest edges from a Kruskal MST
+//in itself MSTs but not balanced  to any workload or number of CUs
+template<typename G, typename V>
+void k_partitions(G& g, int k,  Distance<G,V> dist){
+//using E = typename boost::graph_traits<G>::edge_descriptor;
+  using ndE = typename boost::graph_traits<ndgraph_t>::edge_descriptor;
+  using ndV = typename boost::graph_traits<ndgraph_t>::vertex_descriptor;
+//using V as given by the template param 
+
+  //TODO filter only the CUs
+  //potentially use dijkstras algorythm for distances...
+  
+
+  ndgraph_t partg(4);
+  //boost::copy_graph(g, partg);
+  std::vector<ndE> mst_edges;
+  
+  auto range = boost::vertices(partg);
+  //clear all edges
+  std::for_each(range.first, range.second, [&](auto v){boost::clear_vertex(v, partg);});
+
+  //make a note on where to find each corresponding vertex
+  //this is important to be able to handle filtered graphs, as their vertex descriptors will generally be a subset from the original graph, and since vds are contiguous...
+  std::map<ndV,V> orig_v; 
+  std::for_each(range.first, range.second, [&](auto v){
+    auto gvid = boost::get(&Vertex::vid, partg, v); //get global id
+    auto origvd = get_vds(g,std::make_pair(&Vertex::vid, gvid)).front(); //get local vertex descriptor
+    orig_v[v] = origvd; //map lokal to original vd  
+  });
+  //assign weights
+  std::for_each(range.first,range.second,[&](auto va){
+    std::for_each(range.first, range.second, [&](auto vb){
+      if (va<vb){
+        auto e = boost::add_edge(va, vb, partg).first;
+        boost::put(&Edge::weight, partg, e, dist(orig_v[va], orig_v[vb],g));
+      }
+    });
+  });
+
+  kruskal_minimum_spanning_tree(partg, std::back_inserter(mst_edges), boost::weight_map(boost::get(&Edge::weight, partg)));
+
+  // back in the original graph, add (temporary?) edges that connect a partition
+  const int j = mst_edges.size()-k+1;
+  for (int i = 0; i<j; ++i){
+    auto e = add_edge( //if temporary use boost:: to avoid getting an id
+        orig_v[boost::source(mst_edges[i], partg)],
+        orig_v[boost::target(mst_edges[i], partg)],
+        g)
+      .first; 
+    boost::put(&Edge::label, g, e, "partition");
+  }
+
+
+}
+
+
 
 #endif

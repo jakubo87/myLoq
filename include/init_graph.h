@@ -28,7 +28,7 @@ struct Vertex {
 
 struct Edge {
   EType      label;
-  double     weight=0;
+  double     weight;
   EID         eid;
 };
 
@@ -43,11 +43,15 @@ using graph_t = boost::adjacency_list<
                      //boost::no_property,    //graph property 
                      //boost::multisetS>;     //edge container selector... probably the right one.. but might need major changes concerning VD
 
-//graph internally used descriptors, can become invalidated
-template<typename G>
-using ed_t = typename boost::graph_traits<G>::edge_descriptor;
-template<typename G>
-using vd_t = typename boost::graph_traits<G>::vertex_descriptor;
+using ndgraph_t = boost::adjacency_matrix<
+                            boost::undirectedS,
+                            Vertex,
+                            Edge>;
+
+
+//graph internally used descriptors for the main graph, probably not derived types, can become invalidated
+using ED = typename boost::graph_traits<graph_t>::edge_descriptor;
+using VD = typename boost::graph_traits<graph_t>::vertex_descriptor;
 
 //graph_t init_graph(const hwloc_topology_t & t);
 graph_t init_graph();
