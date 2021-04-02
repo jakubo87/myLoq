@@ -6,7 +6,7 @@ SRC = ./src/
 #BUILD = ./build/
 INCLUDE = ./include/
 OBJS = init_graph.o output_graph.o main.o
-HEADER = ./include/hwloc-test.h ./include/init_graph.h ./include/output_graph.h 
+HEADER = ./include/hwloc-test.h ./include/init_graph.h ./include/output_graph.h ./include/distance.h
 
 
 
@@ -23,4 +23,4 @@ output_graph.o: ${SRC}output_graph.cc
 	${CC} ${CFLAGS} -c $<
 
 clean:
-	-rm -f *.o 
+	-rm -f *.o *.svg *.pdf *.dot

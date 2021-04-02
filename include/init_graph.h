@@ -8,13 +8,14 @@ using Index = unsigned int;
 using Mem   = unsigned long int;
 using SIMD  = unsigned int;
 using RAND  = std::string;
-using VID    = unsigned long int; //eventually tags... for identifying vertices across  graphs
+using VID   = unsigned long int; //eventually tags... for identifying vertices across  graphs
+using Depth = int;
 
 using EType = std::string;
 using EID    = unsigned long int;
 
 
-
+static Depth max_depth = 0; //
 const double NOPATH = 10000;
 
 //not accessible via std::get<type>
@@ -23,15 +24,15 @@ struct Vertex {
   Index      index;
   Mem        mem_cap;
   SIMD       simd;
-  VID         vid; //global vertex descriptor to make graphs copyable and still reliably refer to the same vertex... overhead due to query, but meh..
+  VID        vid; //global vertex descriptor to make graphs copyable and still reliably refer to the same vertex... overhead due to query, but meh..
+  Depth      depth;
 };
 
 struct Edge {
   EType      label;
   double     weight;
-  EID         eid;
+  EID        eid;
 };
-
 
 using graph_t = boost::adjacency_list<
                      boost::vecS, //  out-edge container selector                  
@@ -43,10 +44,7 @@ using graph_t = boost::adjacency_list<
                      //boost::no_property,    //graph property 
                      //boost::multisetS>;     //edge container selector... probably the right one.. but might need major changes concerning VD
 
-using ndgraph_t = boost::adjacency_matrix<
-                            boost::undirectedS,
-                            Vertex,
-                            Edge>;
+using ndgraph_t = boost::adjacency_list<boost::vecS,  boost::vecS, boost::undirectedS, Vertex, Edge>;
 
 
 //graph internally used descriptors for the main graph, probably not derived types, can become invalidated
@@ -341,7 +339,7 @@ struct VPred {
  // VPred(const G& g, const T Vertex::* mptr, const T& value): g_(&g), mptr_(mptr), value_(value) {}
   bool operator()(const E) const {return true;}
   bool operator()(const V v) const {
-    return boost::get(mptr_,*g_, v)< value_;
+    return boost::get(mptr_,*g_, v)== value_;
   }
   G* g_;
   T Vertex::* mptr_;

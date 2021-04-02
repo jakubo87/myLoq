@@ -1,6 +1,6 @@
 #include "../include/init_graph.h"
 #include "../include/output_graph.h"
-
+#include "../include/distance.h"
 #include "../include/hwloc-test.h"
 
 //*
@@ -241,6 +241,7 @@ int main ()
           res = 0.0;        //case when descending in hierarchy
       });
 
+      res+= get(&Vertex::index, g, vb); 
       return res;
     };
 
@@ -299,7 +300,7 @@ int main ()
 
   //####################################     K-PARTITIONS     #################################################
   //make k partitions
-  k_partitions(g,2,dist1);
+  k_partitions(g,2,lca_dist);
 
 
   make_dotfile_nolabel(g,"totalnl.dot");

@@ -69,7 +69,7 @@ graph_t init_graph(){
   //std::cout << t <<"\n"; //print nodes
 
   graph_t g;
-  int max_depth=0;
+  //int max_depth=0;
   int depth=0;
 
  //get all the hw objs
@@ -106,8 +106,8 @@ graph_t init_graph(){
       boost::put(&Vertex::type, g, v, obj_type_toString(obj));
       boost::put(&Vertex::index, g, v, obj->logical_index);
       std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
-    //add relationships
-    if (obj->type!=HWLOC_OBJ_MACHINE){
+      //add relationships
+      if (obj->type!=HWLOC_OBJ_MACHINE){
       //from a childs point of view - the parent will have been added already and can be queried. Otherwise it would be necessary to find blank vertices and attach attributes to make them distinguishable
       //question remains how memory plays into this...
       //find all the parents:
@@ -130,6 +130,10 @@ graph_t init_graph(){
         std::cout << "Added Edge: (from " << v << " to " << p << ", label: parent" << std::endl;
         }
       }
+
+//search for memory child edges
+
+
     }
   }
 

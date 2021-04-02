@@ -16,12 +16,11 @@ public:
     out << "[label=\"" << boost::get(&Vertex::type, g, v) << " #" << boost::get(&Vertex::index, g, v) << "\"]";
   }
   void operator()(std::ostream& out, const E& e) const {
-    if(boost::get(&Edge::label, g, e) == "member")
-      out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=red]";
-    if(boost::get(&Edge::label, g, e) == "replicates")
-      out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=blue]";
-    else
-      out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=black]";
+    auto label = boost::get(&Edge::label, g, e);
+    if (label == "member")    {out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=red]"; return;}
+    if (label == "replicates"){out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=blue]"; return;}
+    if (label == "partition") {out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=green]"; return;}
+    out << "[label=\"" << boost::get(&Edge::label, g, e) << "\", color=black]";
   }
   const G& g;
 };
@@ -96,6 +95,21 @@ bool is_ancestor(const V& va, const V& vb, const G& g){
   return res;
 }
 
+//lowest common ancestor
+template<typename G, typename V>
+V lca(const G& g, V va, V vb){
+  anc_iterator<G> va_it(g,va);
+  anc_iterator<G> vb_it(g,vb);
+ 
+  while(*va_it !=  *vb_it){
+    if(boost::get(&Vertex::depth, g, *va_it) >= boost::get(&Vertex::depth, g, vb))
+      ++va_it;
+    if(boost::get(&Vertex::depth, g, *va_it) < boost::get(&Vertex::depth, g, vb))
+      ++vb_it;
+  }
+  return *va_it;
+}
+
 //###### Implementation
 template <typename Map> //will SFINAE make it right? if we use a type, that is only existent in Edge or Vertex
 struct constrained_map {
@@ -152,10 +166,21 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
 
   //TODO filter only the CUs
   //potentially use dijkstras algorythm for distances...
-  
+ //CHANGE PASSWORD ON GITHUB OR YOURE SCREWED!!!!!!! 
 
-  ndgraph_t partg(4);
-  //boost::copy_graph(g, partg);
+  //auto svert = get_vds(g, std::make_pair(&Vertex::type, "HWLOC_OBJ_PU"));
+  //const auto num_vert = svert.size();
+
+  //std::cout << "Partitioning " << num_vert << "PUs" << std::endl;
+
+  auto fil = filtered_graph(g, &Vertex::type, VType("HWLOC_OBJ_PU"));
+
+  boost::print_graph(fil);
+
+  //keeping it slightly general should a replacement for this algo come
+  ndgraph_t partg;
+  std::cout << "still alive1" << std::endl;
+  boost::copy_graph(fil, partg);
   std::vector<ndE> mst_edges;
   
   auto range = boost::vertices(partg);
@@ -170,6 +195,8 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
     auto origvd = get_vds(g,std::make_pair(&Vertex::vid, gvid)).front(); //get local vertex descriptor
     orig_v[v] = origvd; //map lokal to original vd  
   });
+
+  std::cout << "still alive" << std::endl;
   //assign weights
   std::for_each(range.first,range.second,[&](auto va){
     std::for_each(range.first, range.second, [&](auto vb){
