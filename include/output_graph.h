@@ -102,9 +102,9 @@ V lca(const G& g, V va, V vb){
   anc_iterator<G> vb_it(g,vb);
  
   while(*va_it !=  *vb_it){
-    if(boost::get(&Vertex::depth, g, *va_it) >= boost::get(&Vertex::depth, g, vb))
+    if(boost::get(&Vertex::depth, g, *va_it) >= boost::get(&Vertex::depth, g, *vb_it))
       ++va_it;
-    if(boost::get(&Vertex::depth, g, *va_it) < boost::get(&Vertex::depth, g, vb))
+    if(boost::get(&Vertex::depth, g, *va_it) < boost::get(&Vertex::depth, g, *vb_it))
       ++vb_it;
   }
   return *va_it;
@@ -168,10 +168,6 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
   //potentially use dijkstras algorythm for distances...
  //CHANGE PASSWORD ON GITHUB OR YOURE SCREWED!!!!!!! 
 
-  //auto svert = get_vds(g, std::make_pair(&Vertex::type, "HWLOC_OBJ_PU"));
-  //const auto num_vert = svert.size();
-
-  //std::cout << "Partitioning " << num_vert << "PUs" << std::endl;
 
   auto fil = filtered_graph(g, &Vertex::type, VType("HWLOC_OBJ_PU"));
 
@@ -179,7 +175,6 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
 
   //keeping it slightly general should a replacement for this algo come
   ndgraph_t partg;
-  std::cout << "still alive1" << std::endl;
   boost::copy_graph(fil, partg);
   std::vector<ndE> mst_edges;
   
@@ -196,7 +191,6 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
     orig_v[v] = origvd; //map lokal to original vd  
   });
 
-  std::cout << "still alive" << std::endl;
   //assign weights
   std::for_each(range.first,range.second,[&](auto va){
     std::for_each(range.first, range.second, [&](auto vb){

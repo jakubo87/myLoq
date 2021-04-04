@@ -69,7 +69,7 @@ graph_t init_graph(){
   //std::cout << t <<"\n"; //print nodes
 
   graph_t g;
-  //int max_depth=0;
+  int max_depth=0;
   int depth=0;
 
  //get all the hw objs
@@ -90,6 +90,7 @@ graph_t init_graph(){
     boost::put(&Vertex::vid, g, v, getmax_vid(g)); //get new highest global index
     boost::put(&Vertex::type, g, v, obj_type_toString(obj));
     boost::put(&Vertex::index, g, v, obj->logical_index);
+    boost::put(&Vertex::depth, g, v, obj->depth);
     std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
   }
 
@@ -105,6 +106,7 @@ graph_t init_graph(){
       boost::put(&Vertex::vid, g, v, getmax_vid(g)); //get new highest global index
       boost::put(&Vertex::type, g, v, obj_type_toString(obj));
       boost::put(&Vertex::index, g, v, obj->logical_index);
+      boost::put(&Vertex::depth, g, v, obj->depth);
       std::cout << "Added vertex: (type: " << obj_type_toString(obj) << ", index: " << obj->logical_index << ")" << std::endl;
       //add relationships
       if (obj->type!=HWLOC_OBJ_MACHINE){

@@ -15,7 +15,7 @@ using EType = std::string;
 using EID    = unsigned long int;
 
 
-static Depth max_depth = 0; //
+//static Depth max_depth = 0; //
 const double NOPATH = 10000;
 
 //not accessible via std::get<type>

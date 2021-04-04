@@ -292,6 +292,7 @@ int main ()
 //  auto ctree2 = make_can_tree(g,14);
 //  make_dotfile_nolabel(ctree2,"hwloc.dot");
 
+  make_dotfile_nolabel(g,"totalnl.dot");
 
   //copy tests with copy graph
   graph_t cfg; //deep copy of filtered graph (is this even possible...?, what about the vertex indices...?
