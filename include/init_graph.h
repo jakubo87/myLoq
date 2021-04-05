@@ -235,7 +235,7 @@ template<typename G, typename V>
 int count_obj(const G& g, V vd){
   unsigned int count=0;
   bfs_counter bfsc{count};
-  boost::breadth_first_search(g,getkey(g,vd), boost::visitor(bfsc));
+  boost::breadth_first_search(g,vd, boost::visitor(bfsc));
   std::cout << "counted " <<  count << std::endl;
   return count;
 }
@@ -261,7 +261,7 @@ template< typename G, typename T,typename V>
 T accumulate (const G& g,T Vertex::* mptr , V st_vd){
   T value=0;
   bfs_accumulator<T> bfsa(value, mptr);
-  boost::breadth_first_search(g, getkey(g,st_vd), boost::visitor(bfsa));
+  boost::breadth_first_search(g, st_vd, boost::visitor(bfsa));
   std::cout << "accumulated: " << value << std::endl; 
   return value;
 }

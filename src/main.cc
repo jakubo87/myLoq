@@ -206,9 +206,9 @@ int main ()
 //  std::cout << " Group1 has vd: " << i << std::endl; 
 //
 //
-//  //#################################      VISITORS       TODO###########################################
-//  count_obj(g,1);
-//  accumulate(g,&Vertex::index, 1);
+  //#################################      VISITORS       TODO###########################################
+  count_obj(g,1); //a bit obsolete due to filtering
+  accumulate(g,&Vertex::index, 1);
 //
 //  //###### PATHS/patterns #########
 //  //return the group members of group 

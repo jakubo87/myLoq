@@ -5,7 +5,8 @@ to compile:
 make
 
 to transform the dotfile into a graphic (.svg) one can use the script (make executably if necessary):
-./makedot
+./makesvg
+or ./makepdf
 
 the idea is to...
 1) access hwloc and make a boost graph library graph (init)
