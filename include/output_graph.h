@@ -76,16 +76,16 @@ class anc_iterator{
 };
 
 
-//is va a descendent of vb?
+//is va an ancestor of vb?
 template<typename G, typename V>
 bool is_ancestor(const V& va, const V& vb, const G& g){
 
   bool res=false;
-  anc_iterator<G> it(g,va);
+  anc_iterator<G> it(g,vb);
   V vcur;
   do{
     vcur=*it;      //update
-    if (vcur==vb){ //check
+    if (vcur==va){ //check
       res=true;    //success
       break;       //exit
     }
@@ -96,6 +96,7 @@ bool is_ancestor(const V& va, const V& vb, const G& g){
 }
 
 //lowest common ancestor
+//... will end in endless loop, when no lca exists...
 template<typename G, typename V>
 V lca(const G& g, V va, V vb){
   anc_iterator<G> va_it(g,va);
@@ -144,15 +145,19 @@ struct constrained_map {
 //}
 
 
-template<typename T, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
+template<typename T, typename G> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
-filtered_graph(G& g, T EV::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
-  //make a function, that chooses between edges and vertices...
+filtered_graph(G& g, T Vertex::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
   VPred<T,G> vfil{&g,p,value};
   using fil_t = decltype(vfil);
- // EPred<P, G>  efil(g);
-
   return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
+}
+template<typename T, typename G>
+decltype(auto)
+filtered_graph(G& g, T Edge::* p, T value){
+  EPred<T,G> efil{&g,p,value};
+  using fil_t = decltype(efil);
+  return boost::filtered_graph<G,fil_t,fil_t> (g, efil, efil);
 }
 
 //simple algorithm to make k partitions of CUs by removing k-1 longest edges from a Kruskal MST

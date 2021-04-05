@@ -185,7 +185,8 @@ std::vector<V> shortest_path(const G& g, V va, V vb, Distance<G,V> func){
     res.push_back(p);
     p = d[p];
   }
-  res.push_back(p); //reverses predecessor map into path
+  res.push_back(p);
+  std::reverse(res.begin(), res.end()); //reverses predecessor map into path
   return res;
 }
 
@@ -267,9 +268,6 @@ T accumulate (const G& g,T Vertex::* mptr , V st_vd){
 
 //TODO list:
 //partitioning balanced/evenly or with respect to distances in cores
-//Idea
-//1. make mst in separate temp graph
-//2. remove last k-1 edges
 //3. rattle k-means style until balance is satisfied or break after x iterations
 
 
@@ -339,7 +337,7 @@ struct VPred {
  // VPred(const G& g, const T Vertex::* mptr, const T& value): g_(&g), mptr_(mptr), value_(value) {}
   bool operator()(const E) const {return true;}
   bool operator()(const V v) const {
-    return boost::get(mptr_,*g_, v)== value_;
+    return boost::get(mptr_,*g_, v) == value_;
   }
   G* g_;
   T Vertex::* mptr_;
@@ -350,11 +348,9 @@ template<typename T, typename G>
 struct EPred {
   using E = typename boost::graph_traits<G>::edge_descriptor;
   using V = typename boost::graph_traits<G>::vertex_descriptor;
-  //ctor
-  EPred(const G& g, const T Edge::* mptr, const T& value): g_(&g), mptr_(mptr), value_(value) {}
   bool operator()(const V) const {return true;}
   bool operator()(const E e) const {
-    return boost::get(mptr_,*g_, e)= value_;
+    return boost::get(mptr_,*g_, e) == value_;
   }
   G* g_;
   T Edge::* mptr_;

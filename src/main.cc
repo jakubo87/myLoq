@@ -118,11 +118,15 @@ int main ()
 
   //VPred<Index,graph_t> twoorless{&g,&Vertex::index,2};
 
-  auto fgv = filtered_graph(g, &Vertex::index, Index(2));
-  std::cout << "show only vertices with index < 2" << std::endl; 
+  auto fgv = filtered_graph(g, &Vertex::index, Index(1));
+  std::cout << "show only vertices with index = 1" << std::endl; 
   boost::print_graph(fgv);
-  make_dotfile(fgv, "filtered_edge_graph.dot");
+  make_dotfile(fgv, "filtered_vertex_graph.dot");
 
+  auto fge = filtered_graph(g, &Edge::label, EType("child"));
+  std::cout << "show only edges with label child" << std::endl; 
+  boost::print_graph(fge);
+  make_dotfile(fge, "filtered_edge_graph.dot");
 //  auto  fge = filtered_graph(g, &Edge::label); 
 //  //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
 //  // display all remaining vertices
@@ -133,16 +137,16 @@ int main ()
 //  boost::print_graph(fge);
 //  
 //
-//  //##################################    MATHS     #################################################
-//  //combinatorics (to be integrated into finding best solution)
-//  auto vec = comb(4,std::vector<int> {2,4,6,8,10});
-//  std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
-//  for(auto co : vec){
-//    for(auto el : co)
-//      std::cout << el << " ";
-//    std::cout << std::endl;
-//  }
-//  std::cout << vec.size() << " possible combinations." << std::endl;
+  //##################################    MATHS     #################################################
+  //combinatorics (to be integrated into finding best solution)
+  auto vec = comb(4,std::vector<int> {2,4,6,8,10});
+  std::cout << "combining  [2,4,6,8,10] into sets of 4:" << std::endl;
+  for(auto co : vec){
+    for(auto el : co)
+      std::cout << el << " ";
+    std::cout << std::endl;
+  }
+  std::cout << vec.size() << " possible combinations." << std::endl;
 //
 //
 //  //################################     BASICS     ##################################################
@@ -229,7 +233,7 @@ int main ()
     {
       //the result, if the graph has no direct edge in any allowed category defined by this function
       double res = NOPATH;  //default 
-      auto range = boost::out_edges(va, g); //TODO boost::out_edges works, if you "make clean" one in a while...!
+      auto range = boost::out_edges(va, g);
       //check all edges for label "child"
        std::for_each (range.first, range.second,[&](const auto & ei){
         if (g[ei].label=="child" && vb==target(ei,g))
@@ -246,14 +250,18 @@ int main ()
     };
 
 
-  std::cout << "distance (5,7): " << dist1(5,7,g) << std::endl;
-  std::cout << "distance (8,9): " << dist1(8,9,g) << std::endl;
-//  std::cout << "path from 9 to 8:" << std::endl; 
-//  auto r1 = shortest_path(g, 8, 9, dist1); 
-//  for (auto vd : r1)
-//    std::cout << vd << " ";
-//  std::cout << std::endl;
-//
+  std::cout << "path from PU#0 to PU#3:" << std::endl; 
+  auto pu0 = get_vds(g, std::make_pair(&Vertex::type, "HWLOC_OBJ_PU"), std::make_pair(&Vertex::index, Index(0))).front();
+  auto pu3 = get_vds(g, std::make_pair(&Vertex::type, "HWLOC_OBJ_PU"), std::make_pair(&Vertex::index, Index(3))).front();
+  auto r1 = shortest_path(g, pu0, pu3, dist1); 
+  for (auto vd : r1)
+    std::cout << vd << " ";
+  std::cout << std::endl;
+
+  //ancestry iterator
+  auto l3c0 = get_vds(g, std::make_pair(&Vertex::type, "HWLOC_OBJ_L3CACHE"), std::make_pair(&Vertex::index, Index(0))).front();
+  std::cout << "is LVL3 cache#0 an ancestor of PU#3?: " << is_ancestor(l3c0,pu3,g) << std::endl;
+  std::cout << "vice versa?: " << is_ancestor(pu3,l3c0,g) << std::endl;
 //  //return clostest vertices of specified type sorted by distance
 //  auto cl_pus = find_closest_to(g, dist1, "HWLOC_OBJ_PU", 11);
 //  std::cout << "closest PUs relative to vd(11) with respect to user defined function dist1:" << std::endl;
@@ -281,9 +289,6 @@ int main ()
 //
 //  //TODO find partitioning
 //
-  //ancestry iterator
-  std::cout << "is 3 an ancestor of 11?: " << is_ancestor(11,3,g) << std::endl;
-  std::cout << "is 11 an ancestor of 3?: " << is_ancestor(3,11,g) << std::endl;
 //
 //
 //
