@@ -76,16 +76,16 @@ class anc_iterator{
 };
 
 
-//is va an ancestor of vb?
+//is va a descendent of vb?
 template<typename G, typename V>
 bool is_ancestor(const V& va, const V& vb, const G& g){
 
   bool res=false;
-  anc_iterator<G> it(g,vb);
+  anc_iterator<G> it(g,va);
   V vcur;
   do{
     vcur=*it;      //update
-    if (vcur==va){ //check
+    if (vcur==vb){ //check
       res=true;    //success
       break;       //exit
     }
@@ -96,16 +96,16 @@ bool is_ancestor(const V& va, const V& vb, const G& g){
 }
 
 //lowest common ancestor
-//... will end in endless loop, when no lca exists...
 template<typename G, typename V>
 V lca(const G& g, V va, V vb){
   anc_iterator<G> va_it(g,va);
   anc_iterator<G> vb_it(g,vb);
  
+  std::cout << "nope?" << std::endl;
   while(*va_it !=  *vb_it){
-    if(boost::get(&Vertex::depth, g, *va_it) >= boost::get(&Vertex::depth, g, *vb_it))
+    if(boost::get(&Vertex::depth, g, *va_it) >= boost::get(&Vertex::depth, g, vb))
       ++va_it;
-    if(boost::get(&Vertex::depth, g, *va_it) < boost::get(&Vertex::depth, g, *vb_it))
+    if(boost::get(&Vertex::depth, g, *va_it) < boost::get(&Vertex::depth, g, vb))
       ++vb_it;
   }
   return *va_it;
@@ -145,19 +145,15 @@ struct constrained_map {
 //}
 
 
-template<typename T, typename G> //NOTE can we just use this for querying literally anything...?
+template<typename T, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
-filtered_graph(G& g, T Vertex::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+filtered_graph(G& g, T EV::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+  //make a function, that chooses between edges and vertices...
   VPred<T,G> vfil{&g,p,value};
   using fil_t = decltype(vfil);
+ // EPred<P, G>  efil(g);
+
   return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
-}
-template<typename T, typename G>
-decltype(auto)
-filtered_graph(G& g, T Edge::* p, T value){
-  EPred<T,G> efil{&g,p,value};
-  using fil_t = decltype(efil);
-  return boost::filtered_graph<G,fil_t,fil_t> (g, efil, efil);
 }
 
 //simple algorithm to make k partitions of CUs by removing k-1 longest edges from a Kruskal MST
@@ -168,11 +164,6 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
   using ndE = typename boost::graph_traits<ndgraph_t>::edge_descriptor;
   using ndV = typename boost::graph_traits<ndgraph_t>::vertex_descriptor;
 //using V as given by the template param 
-
-  //TODO filter only the CUs
-  //potentially use dijkstras algorythm for distances...
- //CHANGE PASSWORD ON GITHUB OR YOURE SCREWED!!!!!!! 
-
 
   auto fil = filtered_graph(g, &Vertex::type, VType("HWLOC_OBJ_PU"));
 
@@ -207,6 +198,11 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
   });
 
   kruskal_minimum_spanning_tree(partg, std::back_inserter(mst_edges), boost::weight_map(boost::get(&Edge::weight, partg)));
+
+  for(int i=0; i < mst_edges.size(); ++i)
+    std::cout << partg[mst_edges[i]].weight << std::endl;
+
+
 
   // back in the original graph, add (temporary?) edges that connect a partition
   const int j = mst_edges.size()-k+1;

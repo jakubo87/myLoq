@@ -1,0 +1,1 @@
+dot -Tpdf *.dot -O

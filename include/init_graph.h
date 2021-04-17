@@ -16,7 +16,7 @@ using EID    = unsigned long int;
 
 
 //static Depth max_depth = 0; //
-const double NOPATH = 10000;
+const double NOPATH = 100000000000.0;
 
 //not accessible via std::get<type>
 struct Vertex {

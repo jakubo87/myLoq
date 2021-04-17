@@ -109,15 +109,7 @@ int main ()
   //###################################################################
   //TESTS:
 
-//  struct index_odd{
-//    bool operator(Index i)(
-//
-//
-// };
   //###############################   FILTER GRAPH   ################################################
-
-  //VPred<Index,graph_t> twoorless{&g,&Vertex::index,2};
-
   auto fgv = filtered_graph(g, &Vertex::index, Index(1));
   std::cout << "show only vertices with index = 1" << std::endl; 
   boost::print_graph(fgv);
@@ -127,16 +119,7 @@ int main ()
   std::cout << "show only edges with label child" << std::endl; 
   boost::print_graph(fge);
   make_dotfile(fge, "filtered_edge_graph.dot");
-//  auto  fge = filtered_graph(g, &Edge::label); 
-//  //shallow copy..= also according to the documentation it will not change the original graph... whatever that means if tried...
-//  // display all remaining vertices
-//  auto fil_r = boost::edges(fge);
-//  std::for_each(fil_r.first, fil_r.second, [&](auto e){ std::cout << boost::get(&Edge::label, g, e) << " ";});
-//  std::cout << std::endl;
-//  boost::print_graph(g); 
-//  boost::print_graph(fge);
-//  
-//
+
   //##################################    MATHS     #################################################
   //combinatorics (to be integrated into finding best solution)
   auto vec = comb(4,std::vector<int> {2,4,6,8,10});
@@ -147,19 +130,14 @@ int main ()
     std::cout << std::endl;
   }
   std::cout << vec.size() << " possible combinations." << std::endl;
-//
-//
-//  //################################     BASICS     ##################################################
-//  //find vd 
-//  auto vds = get_vds(
-//      g,                //the graph
-//      VType("HWLOC_OBJ_CORE"), //the type
-//      Index(0));               //the index
-//  std::cout << "vd of core 0: " << vds[0] << std::endl;
-//
-//  //testing for something not included in the
-//  
-//
+
+  //################################     BASICS     ##################################################
+  //find vd 
+  auto co0 = get_vds(
+      g,                //the graph
+      std::make_pair(&Vertex::type,VType("HWLOC_OBJ_CORE")), //the type
+      std::make_pair(&Vertex::index, Index(0)));               //the index
+  std::cout << "vd of core 0: " << co0.front() << std::endl;
 //
 //  //###############################      GET/SET     #################################################
 //  const auto e1 = get_ed(g,2,1,"child").front();
