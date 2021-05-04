@@ -101,11 +101,10 @@ V lca(const G& g, V va, V vb){
   anc_iterator<G> va_it(g,va);
   anc_iterator<G> vb_it(g,vb);
  
-  std::cout << "nope?" << std::endl;
   while(*va_it !=  *vb_it){
-    if(boost::get(&Vertex::depth, g, *va_it) >= boost::get(&Vertex::depth, g, vb))
+    if(boost::get(&Vertex::depth, g, *va_it) >= boost::get(&Vertex::depth, g, *vb_it))
       ++va_it;
-    if(boost::get(&Vertex::depth, g, *va_it) < boost::get(&Vertex::depth, g, vb))
+    if(boost::get(&Vertex::depth, g, *va_it) < boost::get(&Vertex::depth, g, *vb_it))
       ++vb_it;
   }
   return *va_it;
@@ -145,9 +144,20 @@ struct constrained_map {
 //}
 
 
-template<typename T, typename G, typename EV> //NOTE can we just use this for querying literally anything...?
+template<typename T, typename G> //NOTE can we just use this for querying literally anything...?
 decltype(auto)
-filtered_graph(G& g, T EV::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+filtered_graph(G& g, T Edge::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
+  //make a function, that chooses between edges and vertices...
+  EPred<T,G> vfil{&g,p,value};
+  using fil_t = decltype(vfil);
+ // EPred<P, G>  efil(g);
+
+  return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
+}
+
+template<typename T, typename G> //NOTE can we just use this for querying literally anything...?
+decltype(auto)
+filtered_graph(G& g, T Vertex::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
   //make a function, that chooses between edges and vertices...
   VPred<T,G> vfil{&g,p,value};
   using fil_t = decltype(vfil);
@@ -155,7 +165,6 @@ filtered_graph(G& g, T EV::* p, T value){ // std::function<bool(P)>& fun){ //TOD
 
   return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
 }
-
 //simple algorithm to make k partitions of CUs by removing k-1 longest edges from a Kruskal MST
 //in itself MSTs but not balanced  to any workload or number of CUs
 template<typename G, typename V>
