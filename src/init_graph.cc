@@ -57,14 +57,20 @@ std::string obj_type_toString(hwloc_obj_t & obj){
 //  };
 //}
 
+graph_t init_graph(const char* file){
 
-//graph_t init_graph(const hwloc_topology_t & t){
-graph_t init_graph(){
+
   //hwloc_init
   hwloc_topology_t t;
   hwloc_topology_init(&t);  // initialization
   hwloc_topology_set_io_types_filter(t, HWLOC_TYPE_FILTER_KEEP_ALL); //for all the devices, or...
   //hwloc_topology_set_io_types_filter(t,HWLOC_TYPE_FILTER_KEEP_IMPORTANT);
+  
+  //if Synthetic topology
+  if (*file != '0'){
+    //hwloc_topology_set_synthetic(t,)
+    hwloc_topology_set_xml(t,file);    
+  }
   hwloc_topology_load(t);   // actual detection
   //std::cout << t <<"\n"; //print nodes
 
@@ -166,8 +172,10 @@ graph_t init_graph(){
 }
 
 
-
-
+//graph_t init_graph(const hwloc_topology_t & t){
+graph_t init_graph(){
+  return init_graph("0"); // =no external file;
+}
 
 
 

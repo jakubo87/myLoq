@@ -77,12 +77,15 @@
  *
  *
  */
-int main ()
+int main (int argc, char* argv[])
 {
   //#######################   INITIALISATION   ################################################
 
-  
-  auto g = init_graph(); //init lokal machine
+  graph_t g;
+  if (argc==2)
+    g = init_graph(argv[1]); //init synthetic machine from xml path, being the argument
+  else
+    g = init_graph(); //init lokal machine
 //TODO expand graph!
  
   //TODO extensible properties or adding properties the boost way... 

@@ -51,7 +51,7 @@ using ndgraph_t = boost::adjacency_list<boost::vecS,  boost::vecS, boost::undire
 using ED = typename boost::graph_traits<graph_t>::edge_descriptor;
 using VD = typename boost::graph_traits<graph_t>::vertex_descriptor;
 
-//graph_t init_graph(const hwloc_topology_t & t);
+graph_t init_graph(const char* t);
 graph_t init_graph();
 
 std::string obj_type_toString(hwloc_obj_t & obj);
