@@ -36,7 +36,7 @@ std::string obj_type_toString(hwloc_obj_t & obj){
   };
 }
 
-//
+// 
 //constexpr
 //std::string obj_cachetype_toString(hwloc_obj_cache_t & obj){
 //  switch (obj->type) {
@@ -72,13 +72,10 @@ graph_t init_graph(const char* file){
     hwloc_topology_set_xml(t,file);    
   }
   hwloc_topology_load(t);   // actual detection
-  //std::cout << t <<"\n"; //print nodes
 
   graph_t g;
   int max_depth=0;
   int depth=0;
-
- //get all the hw objs
 
   depth = hwloc_get_type_depth(t, HWLOC_OBJ_PACKAGE);
   if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
@@ -101,11 +98,12 @@ graph_t init_graph(const char* file){
   }
 
 
-  //breadth first core tree traversal -> positive depths
+  //get all the hw objs by depth
+  //level-wise traversal -> positive depths
   max_depth = hwloc_topology_get_depth(t);
 
   for (depth = 0; depth < max_depth; depth++) {
-    std::cout << "adding Objects at level to graph: " <<  depth << std::endl;
+    std::cout << "adding Objects to graph at level: " <<  depth << std::endl;
     for (Index i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); ++i) {
       auto obj = hwloc_get_obj_by_depth(t, depth, i);
       auto v = boost::add_vertex(g);

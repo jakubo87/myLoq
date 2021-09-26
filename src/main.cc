@@ -3,80 +3,6 @@
 #include "../include/distance.h"
 #include "../include/hwloc-test.h"
 
-//*
-//indentation of higher depth opjects
-//*/
-//std::ostream & operator<<(std::ostream & os,std::pair<std::string,int> p){
-//  std::string s;
-//  for (int i=0; i<=p.second; ++i){
-//    s+=" ";
-//  }
-//  s+=s+p.first;
-//
-//  return operator<<(os,s);
-//}
-//
-////general for all types with a std::to_string implementation
-//template <class M>
-//std::ostream & operator<<(std::ostream & os,std::pair<M,int> p){
-//  std::string s;
-//  for (int i=0; i<=p.second; ++i){
-//    s+=" ";
-//  }
-//  s+=s+std::to_string(p.first);
-//
-//  return operator<<(os,s);
-//}
-//
-//
-////print topology
-//std::ostream & operator<<(std::ostream & os, hwloc_topology_t & t){
-//  //std::string s;
-//
-//  int max_depth=0;
-//  int depth=0;
-//  std::string s;
-//
-// //print breadth first
-//  os << "breadth first approach\n";
-//
-//  max_depth = hwloc_topology_get_depth(t);
-//
-//
-//  for (depth = 0; depth < max_depth; depth++) {
-//      os << "Objects at level " <<  depth << std::endl;
-//      for (unsigned int i = 0; i < hwloc_get_nbobjs_by_depth(t, depth); i++) {
-//        auto hw_obj = hwloc_get_obj_by_depth(t, depth, i);
-//        s=obj_type_toString(hw_obj) + " " + std::to_string(i) + "\n";
-//        s+= "OS_index: " + std::to_string(hw_obj->os_index) + "??? \n";
-//        s+= "logical index: " + std::to_string(hw_obj->logical_index);
-//        s+='\n';
-//        os << std::make_pair(s,depth);
-//      }
-//    }
-//
-//  os << "\n";
-//
-//  return operator<<(os,"");
-//}
-
-
-
-
-
-/*Vertices:
- * VType type aka std::string
- * Index index aka unsigned long int
- * 
- *Edges:
- * EType label aka std::string
- * double weight=0
- *
- *
- *TODO init additional properties by user
- *
- *
- */
 int main (int argc, char* argv[])
 {
   //#######################   INITIALISATION   ################################################
@@ -282,7 +208,7 @@ int main (int argc, char* argv[])
 
   //copy tests with copy graph
   graph_t cfg; //deep copy of filtered graph (is this even possible...?, what about the vertex indices...?
-  boost::copy_graph(g, cfg);
+  copy_graph(g, cfg);
   make_dotfile_nolabel(cfg, "copied_nolabel.dot");
 
   //####################################     K-PARTITIONS     #################################################
@@ -295,4 +221,3 @@ int main (int argc, char* argv[])
 
   return 0;
 }
-//TODO make tests generic

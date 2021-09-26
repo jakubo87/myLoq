@@ -217,6 +217,7 @@ find_closest_to(const G& g,
 
 
 
+//########QUERYING 
 
 class bfs_counter : public boost::default_bfs_visitor{
 public:
@@ -258,7 +259,7 @@ public:
 
 //perhaps allow std library algorithms for users to iterate over graphs...? nice to have
 template< typename G, typename T,typename V>
-T accumulate (const G& g,T Vertex::* mptr , V st_vd){
+T accumulate (const G& g, T Vertex::* mptr, V st_vd){
   T value=0;
   bfs_accumulator<T> bfsa(value, mptr);
   boost::breadth_first_search(g, st_vd, boost::visitor(bfsa));
@@ -266,14 +267,7 @@ T accumulate (const G& g,T Vertex::* mptr , V st_vd){
   return value;
 }
 
-//TODO list:
-//partitioning balanced/evenly or with respect to distances in cores
-//3. rattle k-means style until balance is satisfied or break after x iterations
 
-
-
-
-//########QUERYING 
 //check a tuple for its properties (type based)
 // ending case for recursion
 template <typename G, typename V>
@@ -423,5 +417,8 @@ inline void remove_vertex(V vd, G& g){
   boost::remove_vertex(vd,g);   //removes the vertex and invalidates all vertex descriptors larger than vd (and of coursee again all edge descriptors
 }
 
-
+template<typename Gi, typename Go>
+void copy_graph(const Gi& gi, const Go& go){
+  boost::copy_graph(gi, go);
+}
 #endif
