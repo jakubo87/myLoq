@@ -5,6 +5,9 @@
 #include "../include/init_graph.h"
 #include "../include/visitors.h"
 #include "../include/predicates.h"
+#include <tuple>
+#include <boost/graph/filtered_graph.hpp>
+#include <boost/graph/copy.hpp>
 
 //Maybe some day...
 //struct default_tag{};
@@ -152,16 +155,6 @@ get_eds(const G& g, VD va, VD vb, const EType& label){
   );
   return res;
 }
-
-//more general graph querying properties
-//same as above, only not only for vertices but also edges in the form of query(T*, args) meaning a property and one ore more constraints (like larger than x, smaller than y...  and then when the next T* is found the process is repeated for the next predicates until the query ends also get will be utilised instead of makeing tuples
-
-
-//next step: query these properties for each vertex/edge on a pattern search
-
-//filtered graph to query stuff
-
-
 
 //some getter and setter for use with global indexed VD and ED for cross graph-comminucation (for internal use, use the boost variant with their internal types 
 //setter

@@ -2,6 +2,7 @@
 #define INIT_GRAPH_H
 
 #include "../include/hwloc-test.h"
+#include <boost/graph/adjacency_list.hpp>
 
 using VType = std::string;
 using Index = unsigned int;

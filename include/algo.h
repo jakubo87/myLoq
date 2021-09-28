@@ -4,7 +4,11 @@
 #include "../include/hwloc-test.h"
 #include "../include/init_graph.h"
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
-
+#include <boost/property_map/property_map.hpp>
+#include <boost/property_map/function_property_map.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/graph_utility.hpp>
+#include <boost/graph/copy.hpp>
 
 //Dijkstras shortest distances algorithm
 //returns the shortest distances. When no direct edge is available, accumulating distances

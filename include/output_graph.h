@@ -4,6 +4,10 @@
 #include "../include/init_graph.h"
 #include "../include/hwloc-test.h"
 #include "../include/predicates.h"
+#include <boost/graph/graph_utility.hpp>
+#include <boost/graph/graphviz.hpp>
+
+
 //####### Printing the graph
 template<typename G>
 class label_writer{

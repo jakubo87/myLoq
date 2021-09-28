@@ -3,6 +3,7 @@
 
 #include "../include/hwloc-test.h"
 #include "../include/init_graph.h"
+#include <boost/graph/breadth_first_search.hpp>
 
 //##############  VISITORS  ######################
 class bfs_counter : public boost::default_bfs_visitor{
@@ -11,7 +12,7 @@ public:
     bfs_counter(unsigned int& num ): num_(num){}
 
     template <typename Vertex, typename Graph >
-    void initialize_vertex(Vertex u, const Graph& g) //what about filtered vertice..?
+    void initialize_vertex(Vertex u, const Graph& g)
     {
       num_++;
     }
