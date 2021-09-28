@@ -1,6 +1,7 @@
 
-#include "../include/init_graph.h"
 #include "../include/hwloc-test.h"
+#include "../include/init_graph.h"
+#include "../include/query_graph.h"
 
 
 

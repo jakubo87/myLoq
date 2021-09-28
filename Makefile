@@ -5,8 +5,8 @@ LIBS = -lm -lhwloc -lboost_graph
 SRC = ./src/
 #BUILD = ./build/
 INCLUDE = ./include/
-OBJS = init_graph.o  main.o #output_graph.o
-HEADER = ./include/hwloc-test.h ./include/init_graph.h ./include/output_graph.h ./include/distance.h
+OBJS = init_graph.o  main.o# output_graph.o
+HEADER = ./include/hwloc-test.h ./include/init_graph.h ./include/output_graph.h ./include/distances.h ./include/visitors.h ./include/predicates.h ./include/algo.h 
 
 
 

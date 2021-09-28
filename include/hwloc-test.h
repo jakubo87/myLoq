@@ -23,8 +23,6 @@
 
 #include <boost/graph/copy.hpp>
 //#include <boost/graph/adjacency_matrix.hpp>
-#include <boost/graph/kruskal_min_spanning_tree.hpp>
-
 
 
 #endif

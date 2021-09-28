@@ -1,6 +1,10 @@
 #include "../include/init_graph.h"
+#include "../include/query_graph.h"
 #include "../include/output_graph.h"
-#include "../include/distance.h"
+#include "../include/distances.h"
+#include "../include/predicates.h"
+#include "../include/visitors.h"
+#include "../include/algo.h"
 #include "../include/hwloc-test.h"
 
 int main (int argc, char* argv[])
@@ -12,26 +16,20 @@ int main (int argc, char* argv[])
     g = init_graph(argv[1]); //init synthetic machine from xml path, being the argument
   else
     g = init_graph(); //init lokal machine
-//TODO expand graph!
  
-  //TODO extensible properties or adding properties the boost way... 
-  //struct Edge {
-  //  EType label;
-  //  double weight=0; //TODO remove? 
-  //};
   //######################      UPDATING SETUP           #####################################
 
   //add new relationship: replicates
   //find last level cache TODO (for all CUs)
-  auto l2 = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_L2CACHE"));
-  auto mem = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_NUMANODE"));
-  for (auto vl : l2){
-    for (auto vm : mem){
-     //this commented line was the former hoped sulotion. however it turned out, that the edges would not appear in the graph. Only like done underneath. This may be some quirk or some larger underlying problem like can be the invalidation of indizes/descriptors and iterators when modifying the graph
-      auto e = add_edge(vl,vm, g).first; //<-- this alone doesn't work!? TODO
-      put(&Edge::label,g,e, "replicates");
-    }
-  }
+//  auto l2 = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_L2CACHE"));
+//  auto mem = get_vds(g,std::make_pair(&Vertex::type,"HWLOC_OBJ_NUMANODE"));
+//  for (auto vl : l2){
+//    for (auto vm : mem){
+//     //this commented line was the former hoped sulotion. however it turned out, that the edges would not appear in the graph. Only like done underneath. This may be some quirk or some larger underlying problem like can be the invalidation of indizes/descriptors and iterators when modifying the graph
+//      auto e = add_edge(vl,vm, g).first; //<-- this alone doesn't work!? TODO
+//      put(&Edge::label,g,e, "replicates");
+//    }
+//  }
 
   boost::print_graph(g);
 
@@ -211,13 +209,74 @@ int main (int argc, char* argv[])
   copy_graph(g, cfg);
   make_dotfile_nolabel(cfg, "copied_nolabel.dot");
 
-  //####################################     K-PARTITIONS     #################################################
+
+
+
+
+
+
+
+  //####################################   K-PARTITIONS CU   #################################################
   //make k partitions
   k_partitions(g,2,lca_dist);
+
+  //#################### ADJACENCY FILTER #########################
+  auto vic = vicinity(g, l3c0);
+  make_dotfile(vic, "vicinity.dot");
+
+  
+
+
+  //######################################## LEADER TEST  #####################################################
+  
+  //
+  //Measurement happens here
+  //
+  
+  //Clustering - Done by the 
+
+//  std::function<double(VD,VD, const graph_t&)> d_meas =  [&](auto va, auto vb, const graph_t& g)
+//    {
+//      
+//
+//
+//      //the result, if the graph has no direct edge in any allowed category defined by this function
+//      double res = NOPATH;  //default 
+//      auto range = boost::out_edges(va, g);
+//      //check all edges for label "child"
+//       std::for_each (range.first, range.second,[&](const auto & ei){
+//        if (g[ei].label=="child" && vb==target(ei,g))
+//          res = 10.0;       //case of rising in the hierarchy
+//      });
+//      //check all edges for label "parent"
+//      std::for_each (range.first, range.second,[&](const auto & ei){
+//        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
+//          res = 0.0;        //case when descending in hierarchy
+//      });
+//
+//      res+= get(&Vertex::index, g, vb); 
+//      return res;
+//    };
+//
+//  k_partitions(g, 2, d_meas);
+
+
+
+
+
+
 
 
   make_dotfile_nolabel(g,"totalnl.dot");
   make_dotfile(g,"total.dot");
+
+
+
+
+
+
+
+
 
   return 0;
 }
