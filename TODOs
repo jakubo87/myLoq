@@ -1,5 +1,0 @@
-1. use non-modifying (apart from adding a group VD) partitioning by the means of groups
-each group is the solution of a query for optimisation according to constraints and functions
-being a member of a certain group can be a condition of a following query
-queries dont interact with each other, it is though possible to have multiple groups from each query
-therefore there is no real use in removing groups....
