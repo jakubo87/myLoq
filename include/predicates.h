@@ -56,4 +56,24 @@ struct VPred_adj {
 };
 
 
+//adjacency
+////WARNING can if some far away vertices are in connected by some  lead to false assumptions if not filtered correctly
+template<typename G>
+struct VPred_cat {
+  using E = typename boost::graph_traits<G>::edge_descriptor;
+  using V = typename boost::graph_traits<G>::vertex_descriptor;
+  //ctor
+  bool operator()(const E) const {return true;}
+  bool operator()(const V v) const {
+    bool res = false;
+    auto o_range = boost::out_edges(v,*g_);
+    std::for_each(o_range.first, o_range.second, [&](const auto& e){if (boost::get(&Edge::label, *g_, e) == label_) res = true;});
+    auto i_range = boost::in_edges(v,*g_);
+    std::for_each(i_range.first, i_range.second, [&](const auto& e){if (boost::get(&Edge::label, *g_, e) == label_) res = true;});
+    return res;
+  }
+  G* g_;
+  EType label_;
+};
+
 #endif

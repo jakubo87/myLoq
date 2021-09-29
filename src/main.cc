@@ -31,7 +31,7 @@ int main (int argc, char* argv[])
 //    }
 //  }
 
-  boost::print_graph(g);
+  make_dotfile(g, "new.dot");
 
   //###################################################################
   //TESTS:
@@ -210,15 +210,19 @@ int main (int argc, char* argv[])
   make_dotfile_nolabel(cfg, "copied_nolabel.dot");
 
 
-
-
-
-
-
-
   //####################################   K-PARTITIONS CU   #################################################
   //make k partitions
   k_partitions(g,2,lca_dist);
+
+
+  //#####################################   REACHABILITY  #######################################
+  //forming a disjoined graph 
+  auto part = filtered_graph(g, &Edge::label, EType("partition"));
+  is_reachable(part, 10, 11);
+  is_reachable(part, 11, 10); //against the direction....
+  is_reachable(part, 10, 13);
+
+
 
   //#################### ADJACENCY FILTER #########################
   auto vic = vicinity(g, l3c0);
@@ -229,54 +233,77 @@ int main (int argc, char* argv[])
 
   //######################################## LEADER TEST  #####################################################
   
+  //partition into 2 cluster
   //
   //Measurement happens here
+  //for (a : N)
+  //  for (b : M)
+  //     (<a,b>,t_ab) = measured time
   //
   
-  //Clustering - Done by the 
+  auto leadpart = isolate_cat(g, EType("partition"));
+  make_dotfile(leadpart, "part.dot");
 
-//  std::function<double(VD,VD, const graph_t&)> d_meas =  [&](auto va, auto vb, const graph_t& g)
-//    {
-//      
-//
-//
-//      //the result, if the graph has no direct edge in any allowed category defined by this function
-//      double res = NOPATH;  //default 
-//      auto range = boost::out_edges(va, g);
-//      //check all edges for label "child"
-//       std::for_each (range.first, range.second,[&](const auto & ei){
-//        if (g[ei].label=="child" && vb==target(ei,g))
-//          res = 10.0;       //case of rising in the hierarchy
-//      });
-//      //check all edges for label "parent"
-//      std::for_each (range.first, range.second,[&](const auto & ei){
-//        if (g[ei].label=="parent" && va==source(ei,g) && vb==target(ei,g))
-//          res = 0.0;        //case when descending in hierarchy
-//      });
-//
-//      res+= get(&Vertex::index, g, vb); 
-//      return res;
-//    };
-//
-//  k_partitions(g, 2, d_meas);
+  std::function<double(VD,VD, const graph_t&)> d_meas =  [&](auto va, auto vb, const graph_t& g)
+    {
+      //return your measured results here
+      //we have no results so we cheat...
+      return lca(g, va,vb) + get(&Vertex::index, g, va) + get(&Vertex::index, g, vb);
+    };
+  
+  //would have been nicer with something like accumulate_if
+  auto range = vertices(leadpart);
+  std::vector<VD> N;
+  auto t = *range.first; //choose which goes where
+  std::vector<VD> M;
 
+  //populate
+  std::for_each(range.first, range.second, [&](const auto & v)
+    {
+      if (is_reachable(leadpart, t, v))
+        N.push_back(v);
+      else
+        M.push_back(v);
+    }
+  );
 
+  VD n_ = 0;
+  VD m_ = 0;
+  double dn = NOPATH;
+  double dm = NOPATH;
 
+  //accumulate and find min sum
+  for(auto n : N){
+    double sum=0;      //(re)set
+    for (auto m : M)
+      sum+=d_meas(n,m,g);
+    if (sum < dn){
+      dn = sum;
+      n_ = n;
+    }
+  }
 
+  //accumulate and find min sum
+  for(auto m : M){
+    double sum=0;
+    for (auto n : N)
+      sum+=d_meas(m,n,g);
+    if (sum < dm){
+      dm = sum;
+      m_ = m;
+    }
+  }
 
+  std::vector<VD> leet;
+  leet.push_back(n_);
+  leet.push_back(m_);
+
+  make_group(std::string("leader"), leet, g);
 
 
 
   make_dotfile_nolabel(g,"totalnl.dot");
   make_dotfile(g,"total.dot");
-
-
-
-
-
-
-
-
 
   return 0;
 }

@@ -128,12 +128,14 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
   // back in the original graph, add (temporary?) edges that connect a partition
   const int j = mst_edges.size()-k+1;
   for (int i = 0; i<j; ++i){
-    auto e = add_edge( //if temporary use boost:: to avoid getting an id
-        orig_v[boost::source(mst_edges[i], partg)],
-        orig_v[boost::target(mst_edges[i], partg)],
-        g)
-      .first; 
+    auto a = orig_v[boost::source(mst_edges[i], partg)];
+    auto b = orig_v[boost::target(mst_edges[i], partg)];
+
+    auto e = add_edge(a,b,g).first; //if temporary use boost:: to avoid getting an id
     boost::put(&Edge::label, g, e, "partition");
+
+    auto f = add_edge(b,a,g).first; //if temporary use boost:: to avoid getting an id
+    boost::put(&Edge::label, g, f, "partition");
   }
 
 

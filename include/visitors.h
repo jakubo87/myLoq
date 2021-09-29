@@ -28,10 +28,31 @@ public:
     template <typename Vertex, typename G >
     void discover_vertex(Vertex u, const G& g)
     {
-      sum_+=boost::get(mptr_,g, u);   //g[u].index;
+      sum_+=boost::get(mptr_,g, u);
     }
     T& sum_;
     T Vertex::* mptr_;
+};
+
+template<typename V>
+class bfs_reacher : public boost::default_bfs_visitor{
+public:
+    //default ctors
+    bfs_reacher(bool& res, V target) : res_(res), target_(target){}
+
+    template <typename Vertex, typename G>
+    void discover_vertex(Vertex u, const G& g)
+    {
+      if (u==target_ && end_ == 0) res_ = true;
+    }
+    template <typename Vertex, typename G>
+    void non_tree_edge(Vertex u, const G& g)
+    {
+      end_ = 1; //disallow "finding" the target later 
+    }
+    bool end_ = 0;
+    bool& res_;
+    V target_; 
 };
 
 

@@ -108,6 +108,15 @@ T accumulate (const G& g, T Vertex::* mptr, V st_vd){
   return value;
 }
 
+template< typename G, typename V>
+bool is_reachable (const G& g, V vd1, V vd2){
+  bool res=0;
+  bfs_reacher<V> reach(res, vd2);
+  boost::breadth_first_search(g, vd1, boost::visitor(reach));
+  std::cout << vd2 << " is reachable from " << vd1 <<": " << res << std::endl; 
+  return res;
+}
+
 
 //check a tuple for its properties (type based)
 // ending case for recursion
@@ -232,6 +241,13 @@ decltype(auto) adjacent_vertices(VD vd, const G& g){
   return boost::adjacent_vertices(vd, g);
 }
 
+//######### adjacent vertices #########
+template<typename G>
+decltype(auto) vertices(const G& g){
+  return boost::vertices(g);
+}
+
+
 
 
 //goto parent iterator -> only in the parent/child cathegory
@@ -314,10 +330,9 @@ struct constrained_map {
 
 //############################  FILTERING  ###############################################
 // Vertex and edge filters
-template<typename T, typename G> //NOTE can we just use this for querying literally anything...?
+template<typename T, typename G> 
 decltype(auto)
-filtered_graph(G& g, T Edge::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
-  //make a function, that chooses between edges and vertices...
+filtered_graph(G& g, T Edge::* p, T value){ 
   EPred<T,G> vfil{&g,p,value};
   using fil_t = decltype(vfil);
  // EPred<P, G>  efil(g);
@@ -325,23 +340,31 @@ filtered_graph(G& g, T Edge::* p, T value){ // std::function<bool(P)>& fun){ //T
   return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
 }
 
-template<typename T, typename G> //NOTE can we just use this for querying literally anything...?
+template<typename T, typename G> 
 decltype(auto)
-filtered_graph(G& g, T Vertex::* p, T value){ // std::function<bool(P)>& fun){ //TODO make it arbitrary in length or leave it to the user.. IDEA make an filtered graph of a filtered graph recursively to facilitate all the needs... otherwise one would have to distinguish which is about vertices and which is about edges
-  //make a function, that chooses between edges and vertices...
+filtered_graph(G& g, T Vertex::* p, T value){ 
   VPred<T,G> vfil{&g,p,value};
   using fil_t = decltype(vfil);
- // EPred<P, G>  efil(g);
 
   return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
 }
 
 //Adjacency filter
-template<typename V, typename G> //NOTE can we just use this for querying literally anything...?
+template<typename V, typename G> 
 decltype(auto)
 vicinity(G& g, V vd){
-//  static_assert((typename boost::graph_traits<G>::vertex_descriptor == V));
   VPred_adj<G> vfil{&g, vd};
+  using fil_t = decltype(vfil);
+
+  return boost::filtered_graph<G,fil_t,fil_t> (g, vfil, vfil);
+}
+
+//Adjacency filter
+template<typename G> 
+decltype(auto)
+isolate_cat(G& g, const EType& label){
+//  static_assert(std::is_same<typename boost::graph_traits<G>::vertex_descriptor,V>));
+  VPred_cat<G> vfil{&g, label};
   using fil_t = decltype(vfil);
  // EPred<P, G>  efil(g);
 
