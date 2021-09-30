@@ -9,6 +9,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/graph/copy.hpp>
+#include <algorithm>
 
 //Dijkstras shortest distances algorithm
 //returns the shortest distances. When no direct edge is available, accumulating distances
@@ -137,8 +138,26 @@ void k_partitions(G& g, int k,  Distance<G,V> dist){
     auto f = add_edge(b,a,g).first; //if temporary use boost:: to avoid getting an id
     boost::put(&Edge::label, g, f, "partition");
   }
-
-
 }
+
+template<typename G, typename V>
+std::vector<std::pair<V,double>>
+find_closest_to(const G& g,
+                Distance<G,V> dist, //distance function check if this or the dijkstra find!)
+                VType type, V start){
+  //get all VDs of specified type
+  auto vds = get_vds(g,std::make_pair(&Vertex::type,type));
+  std::vector<std::pair<V,double>> res(vds.size());
+ // struct less_by_dist{
+ //   bool operator(const auto& a, const auto& b) const { return a.second < b.second };
+ // }
+  
+  std::transform(vds.begin(), vds.end(), res.begin(),[&](const auto& vd)
+    {return  std::make_pair(vd, dijkstra_spaths(g,start,dist)[vd]);});           // <---- here!
+
+  std::sort(res.begin(),res.end(),[&](const auto& a, const auto& b) { return a.second < b.second ; } );
+  return res;
+}
+
 
 #endif

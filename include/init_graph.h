@@ -32,6 +32,7 @@ struct Vertex {
 struct Edge {
   EType      label;
   double     weight;
+  Mem				 mem_req;
   EID        eid;
 };
 

@@ -1,12 +1,14 @@
-# hwloc-test
+# myloq
 Translates hwloc2-API topology into Boost Graph Library graph.
 
 to compile:
 make
 
-to transform the dotfile into a graphic (.svg) one can use the script (make executably if necessary):
-./makesvg
-or ./makepdf
+Assumedly hwloc (v2.5.0 tested, 2.x.x may suffice) and Boost (v1.77.0 tested) are installed. For compilation gcc v11.1.0 has been used.
+
+
+To transform the dotfile into a graphic (.svg) one can use the script (make executably if necessary):
+./makesvg.sh or ./makepdf.sh
 
 the idea is to...
 1) access hwloc and make a boost graph library graph (init)
