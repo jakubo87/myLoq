@@ -1,0 +1,2 @@
+For synthetic topologies from .xml files visit:
+https://hwloc.gitlabpages.inria.fr/xmls/

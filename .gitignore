@@ -8,4 +8,5 @@ hwloc-git/
 *.svg
 *.pdf
 *.gch
+*.xml
 hwloc-test
